@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #0f172a;
+  /* Slate 900 */
+  color: #f8fafc;
+  /* Slate 50 */
+  overflow: hidden;
+  /* App handles scrolling */
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Custom Red Crosshair Cursor */
+.cursor-custom-crosshair {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="white" stroke-width="4" d="M12,1 L12,23 M1,12 L23,12" opacity="0.8"/><path fill="none" stroke="red" stroke-width="2" d="M12,1 L12,23 M1,12 L23,12"/></svg>') 12 12, crosshair;
+}
