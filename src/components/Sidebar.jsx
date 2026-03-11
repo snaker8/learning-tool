@@ -38,11 +38,16 @@ export default function Sidebar() {
     const handleQuickCopy = async (crop) => {
         if (!crop.imageUrl) return;
         try {
-            await MergeService.copyToClipboard(crop.imageUrl);
-            setCopiedId(crop.id);
-            setTimeout(() => setCopiedId(null), 1000);
+            const success = await MergeService.copyToClipboard(crop.imageUrl);
+            if (success) {
+                setCopiedId(crop.id);
+                setTimeout(() => setCopiedId(null), 1000);
+            } else {
+                alert("클립보드 복사에 실패했습니다. 브라우저 권한을 확인해주세요.");
+            }
         } catch (err) {
-            console.error(err);
+            console.error("Quick copy failed:", err);
+            alert("클립보드 복사 중 오류가 발생했습니다.");
         }
     };
 
@@ -64,10 +69,12 @@ export default function Sidebar() {
                 setTimeout(() => setMergeStatus(null), 2000);
             } else {
                 setMergeStatus('error');
+                alert("이미지 병합 복사에 실패했습니다. 클립보드 권한을 확인해주세요.");
             }
         } catch (error) {
-            console.error(error);
+            console.error("Merge and copy failed:", error);
             setMergeStatus('error');
+            alert("이미지 병합 복사 중 오류가 발생했습니다.");
         } finally {
             setIsMerging(false);
         }
@@ -81,7 +88,6 @@ export default function Sidebar() {
         handleSequentialCopy(0);
     };
 
-    // 다음 이미지 복사
     const handleSequentialCopy = async (index) => {
         if (index >= crops.length) {
             setIsSequentialMode(false);
@@ -90,9 +96,20 @@ export default function Sidebar() {
         }
         const crop = crops[index];
         if (crop?.imageUrl) {
-            await MergeService.copyToClipboard(crop.imageUrl);
-            setCopiedId(crop.id);
-            setTimeout(() => setCopiedId(null), 500);
+            try {
+                const success = await MergeService.copyToClipboard(crop.imageUrl);
+                if (success) {
+                    setCopiedId(crop.id);
+                    setTimeout(() => setCopiedId(null), 500);
+                } else {
+                    alert("연속 복사 중 클립보드 접근에 실패했습니다.");
+                    handleStopSequentialCopy();
+                }
+            } catch (err) {
+                console.error("Sequential copy failed:", err);
+                alert("연속 복사 중 오류가 발생했습니다.");
+                handleStopSequentialCopy();
+            }
         }
     };
 
@@ -339,7 +356,7 @@ export default function Sidebar() {
                                             <div className="h-24 bg-black/20 rounded-lg flex items-center justify-center text-[10px] text-slate-600 overflow-hidden border border-white/5 relative">
                                                 <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:8px_8px] opacity-50"></div>
                                                 {crop.imageUrl ? (
-                                                    <img src={crop.imageUrl} alt="Crop preview" className="h-full object-contain relative z-10 pointer-events-none" />
+                                                    <img src={crop.imageUrl} alt="Crop preview" loading="lazy" className="h-full object-contain relative z-10 pointer-events-none" />
                                                 ) : (
                                                     "No Preview"
                                                 )}

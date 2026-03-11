@@ -1,43 +1,50 @@
 export class ImageGenerator {
     /**
-     * Generates a Data URL for a specific crop region from a canvas.
+     * Generates a Blob URL for a specific crop region from a canvas.
      * @param {HTMLCanvasElement} sourceCanvas - The source canvas containing the PDF page
-     * @param {object} rect - { x, y, width, height } in UNSCALED units (if canvas is scaled, need to adjust)
+     * @param {object} rect - { x, y, width, height } in UNSCALED units
      * @param {number} scale - The scale factor of the sourceCanvas (e.g., 1.5)
-     * @returns {string} Data URL of the cropped image
+     * @returns {Promise<string>} Promise resolving to a Blob URL of the cropped image
      */
     static generateCropImage(sourceCanvas, rect, scale = 1.5) {
-        if (!sourceCanvas) return null;
+        return new Promise((resolve) => {
+            if (!sourceCanvas) {
+                resolve(null);
+                return;
+            }
 
-        // Create a temporary canvas
-        const tempCanvas = document.createElement('canvas');
-        const ctx = tempCanvas.getContext('2d');
+            // Create a temporary canvas
+            const tempCanvas = document.createElement('canvas');
+            const ctx = tempCanvas.getContext('2d');
 
-        // The rect coords are usually passed as "viewport" coords (e.g. 800px width),
-        // BUT `sourceCanvas` is rendered at `scale` (e.g. 1.5x -> 1200px width).
-        // So we need to map the rect to the canvas pixel coordinates.
+            // Map the rect to the canvas pixel coordinates
+            const pixelX = rect.x * scale;
+            const pixelY = rect.y * scale;
+            const pixelW = rect.width * scale;
+            const pixelH = rect.height * scale;
 
-        // If rect is coming from AutoCropService (which analyzes the canvas directly), 
-        // its coords might already be in canvas pixels?
-        // -> In PdfViewer, we did `rect.x * scaleinv`. That put them in "Viewport Points".
-        // -> So `rect` here is likely in "Viewport Points".
+            tempCanvas.width = pixelW;
+            tempCanvas.height = pixelH;
 
-        // So to get Canvas Pixels:
-        const pixelX = rect.x * scale;
-        const pixelY = rect.y * scale;
-        const pixelW = rect.width * scale;
-        const pixelH = rect.height * scale;
+            // Draw content
+            ctx.drawImage(
+                sourceCanvas,
+                pixelX, pixelY, pixelW, pixelH,
+                0, 0, pixelW, pixelH
+            );
 
-        tempCanvas.width = pixelW;
-        tempCanvas.height = pixelH;
-
-        // Draw content
-        ctx.drawImage(
-            sourceCanvas,
-            pixelX, pixelY, pixelW, pixelH,
-            0, 0, pixelW, pixelH
-        );
-
-        return tempCanvas.toDataURL('image/png');
+            // Convert to Blob URL (more memory efficient than Data URL)
+            tempCanvas.toBlob((blob) => {
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    resolve(url);
+                } else {
+                    resolve(null);
+                }
+                // Cleanup temp canvas
+                tempCanvas.width = 0;
+                tempCanvas.height = 0;
+            }, 'image/png');
+        });
     }
 }

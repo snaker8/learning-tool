@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const CropContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCropContext() {
     return useContext(CropContext);
 }
@@ -19,7 +20,7 @@ export function CropProvider({ children }) {
         sensitivity: 30,
         mergeWidth: 800,
         mergeGap: 50,
-        renderScale: 3.0  // PDF 렌더링 해상도 (1.0 ~ 6.0)
+        renderScale: 2.0  // PDF 렌더링 해상도 (1.0 ~ 6.0) - 최적화를 위해 2.0으로 하향 조정
     });
 
     const updateSettings = useCallback((updates) => {
@@ -36,7 +37,13 @@ export function CropProvider({ children }) {
     }, []);
 
     const removeCrop = useCallback((id) => {
-        setCrops(prev => prev.filter(c => c.id !== id));
+        setCrops(prev => {
+            const cropToRemove = prev.find(c => c.id === id);
+            if (cropToRemove && cropToRemove.imageUrl && cropToRemove.imageUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(cropToRemove.imageUrl);
+            }
+            return prev.filter(c => c.id !== id);
+        });
         if (selectedCropId === id) setSelectedCropId(null);
     }, [selectedCropId]);
 
@@ -45,7 +52,14 @@ export function CropProvider({ children }) {
     }, []);
 
     const clearCrops = useCallback(() => {
-        setCrops([]);
+        setCrops(prev => {
+            prev.forEach(crop => {
+                if (crop.imageUrl && crop.imageUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(crop.imageUrl);
+                }
+            });
+            return [];
+        });
         setSelectedCropId(null);
     }, []);
 

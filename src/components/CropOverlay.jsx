@@ -3,7 +3,7 @@ import { useCropContext } from '../context/CropContext';
 import { ImageGenerator } from '../services/ImageGenerator';
 import { AutoCropService } from '../services/AutoCropService';
 
-export default function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop }) {
+const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop }) {
     const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings } = useCropContext();
     const [isDrawing, setIsDrawing] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -12,15 +12,27 @@ export default function CropOverlay({ pageNum, scale, renderScale = 1.5, width, 
     const [startPos, setStartPos] = useState({ x: 0, y: 0 });
     const [currentRect, setCurrentRect] = useState(null);
     const containerRef = useRef(null);
+    const [activeCropOverride, setActiveCropOverride] = useState(null);
+    const [actualScale, setActualScale] = useState(1);
 
-    // 실제 DOM과 캔버스 간의 비율을 동적으로 계산
-    const getActualScale = () => {
-        if (!containerRef.current || !canvas) return scale;
-        const visualRect = containerRef.current.getBoundingClientRect();
-        if (visualRect.width <= 0) return scale;
-        // DOM 표시 크기 대비 캔버스 실제 픽셀 비율
-        return canvas.width / visualRect.width;
-    };
+    useEffect(() => {
+        if (!containerRef.current || !canvas) return;
+
+        const updateScale = () => {
+            if (!containerRef.current || !canvas) return;
+            const visualRect = containerRef.current.getBoundingClientRect();
+            if (visualRect.width > 0) {
+                setActualScale(canvas.width / visualRect.width);
+            }
+        };
+
+        updateScale(); // Initial call
+
+        const observer = new ResizeObserver(updateScale);
+        observer.observe(containerRef.current);
+
+        return () => observer.disconnect();
+    }, [canvas, scale, renderScale]);
 
     // Filter crops for this page
     const pageCrops = crops.filter(c => c.pageNum === pageNum);
@@ -265,19 +277,19 @@ export default function CropOverlay({ pageNum, scale, renderScale = 1.5, width, 
             y: initialCropRect.y + deltaY
         };
 
-        updateCrop(selectedCropId, newRect);
+        setActiveCropOverride(newRect);
     };
 
     const handleCropPointerUp = (e) => {
         if (isDragging) {
             setIsDragging(false);
 
-            // Regenerate image on drag end
-            const crop = crops.find(c => c.id === selectedCropId);
-            if (crop && canvas) {
-                const finalRect = { x: crop.x, y: crop.y, width: crop.width, height: crop.height };
+            if (activeCropOverride) {
+                // Regenerate image on drag end
+                const finalRect = { x: activeCropOverride.x, y: activeCropOverride.y, width: activeCropOverride.width, height: activeCropOverride.height };
                 const imageUrl = ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
-                updateCrop(selectedCropId, { imageUrl });
+                updateCrop(selectedCropId, { ...finalRect, imageUrl });
+                setActiveCropOverride(null);
             }
 
             setInitialCropRect(null);
@@ -357,12 +369,11 @@ export default function CropOverlay({ pageNum, scale, renderScale = 1.5, width, 
 
         const { handle, startX, startY, initialRect, id } = resizeState;
         // DOM 픽셀 delta를 논리적 좌표로 변환
-        const actualScale = getActualScale();
         const displayScale = renderScale / actualScale;
         const deltaX = (e.clientX - startX) / displayScale;
         const deltaY = (e.clientY - startY) / displayScale;
 
-        let newRect = { ...initialRect };
+        let newRect = { ...initialRect, id }; // ensure id is retained
 
         if (handle.includes('e')) newRect.width = Math.max(10, initialRect.width + deltaX);
         if (handle.includes('s')) newRect.height = Math.max(10, initialRect.height + deltaY);
@@ -377,17 +388,17 @@ export default function CropOverlay({ pageNum, scale, renderScale = 1.5, width, 
             newRect.height = h;
         }
 
-        updateCrop(id, newRect);
+        setActiveCropOverride(newRect);
     };
 
     const handleResizePointerUp = (e) => {
         if (resizeState) {
-            // Regenerate image on resize end
-            const crop = crops.find(c => c.id === resizeState.id);
-            if (crop && canvas) {
-                const finalRect = { x: crop.x, y: crop.y, width: crop.width, height: crop.height };
+            if (activeCropOverride) {
+                // Regenerate image on resize end
+                const finalRect = { x: activeCropOverride.x, y: activeCropOverride.y, width: activeCropOverride.width, height: activeCropOverride.height };
                 const imageUrl = ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
-                updateCrop(resizeState.id, { imageUrl });
+                updateCrop(resizeState.id, { ...finalRect, imageUrl });
+                setActiveCropOverride(null);
             }
 
             setResizeState(null);
@@ -405,64 +416,67 @@ export default function CropOverlay({ pageNum, scale, renderScale = 1.5, width, 
             onPointerLeave={handlePointerUp}
         >
             {/* Existing Crops */}
-            {pageCrops.map(crop => {
+            {pageCrops.map(originalCrop => {
+                const crop = (activeCropOverride && activeCropOverride.id === originalCrop.id)
+                    ? { ...originalCrop, ...activeCropOverride }
+                    : originalCrop;
+
                 // 논리적 좌표 -> DOM 픽셀 변환
-                const actualScale = getActualScale();
                 const displayScale = renderScale / actualScale;
                 return (
-                <div
-                    key={crop.id}
-                    className={`absolute border-2 transition-all ${selectedCropId === crop.id
-                        ? 'border-blue-500 bg-blue-500/20 z-20 shadow-[0_0_0_2px_rgba(59,130,246,0.3)]'
-                        : 'border-red-500 bg-red-500/10 hover:border-red-600 hover:bg-red-500/20 z-10'
-                        }`}
-                    style={{
-                        left: `${crop.x * displayScale}px`,
-                        top: `${crop.y * displayScale}px`,
-                        width: `${crop.width * displayScale}px`,
-                        height: `${crop.height * displayScale}px`,
-                    }}
-                    onPointerDown={(e) => handleCropPointerDown(e, crop)}
-                    onPointerMove={handleCropPointerMove}
-                    onPointerUp={handleCropPointerUp}
-                >
-                    {/* Delete Button (Visible on hover or select) */}
-                    {/* Delete Button & Resize Handles */}
-                    {(selectedCropId === crop.id) && (
-                        <>
-                            <button
-                                className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow-md hover:scale-110 transition-transform z-50"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeCrop(crop.id);
-                                }}
-                            >
-                                ✕
-                            </button>
+                    <div
+                        key={crop.id}
+                        className={`absolute border-2 transition-all ${selectedCropId === crop.id
+                            ? 'border-blue-500 bg-blue-500/20 z-20 shadow-[0_0_0_2px_rgba(59,130,246,0.3)]'
+                            : 'border-red-500 bg-red-500/10 hover:border-red-600 hover:bg-red-500/20 z-10'
+                            }`}
+                        style={{
+                            left: `${crop.x * displayScale}px`,
+                            top: `${crop.y * displayScale}px`,
+                            width: `${crop.width * displayScale}px`,
+                            height: `${crop.height * displayScale}px`,
+                        }}
+                        onPointerDown={(e) => handleCropPointerDown(e, crop)}
+                        onPointerMove={handleCropPointerMove}
+                        onPointerUp={handleCropPointerUp}
+                    >
+                        {/* Delete Button (Visible on hover or select) */}
+                        {/* Delete Button & Resize Handles */}
+                        {(selectedCropId === crop.id) && (
+                            <>
+                                <button
+                                    className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow-md hover:scale-110 transition-transform z-50"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeCrop(crop.id);
+                                    }}
+                                >
+                                    ✕
+                                </button>
 
-                            {/* Resize Handles */}
-                            {[
-                                { h: 'nw', pos: 'top-0 left-0 -translate-x-1/2 -translate-y-1/2', cursor: 'cursor-nw-resize' },
-                                { h: 'n', pos: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2', cursor: 'cursor-n-resize' },
-                                { h: 'ne', pos: 'top-0 right-0 translate-x-1/2 -translate-y-1/2', cursor: 'cursor-ne-resize' },
-                                { h: 'w', pos: 'top-1/2 left-0 -translate-x-1/2 -translate-y-1/2', cursor: 'cursor-w-resize' },
-                                { h: 'e', pos: 'top-1/2 right-0 translate-x-1/2 -translate-y-1/2', cursor: 'cursor-e-resize' },
-                                { h: 'sw', pos: 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2', cursor: 'cursor-sw-resize' },
-                                { h: 's', pos: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2', cursor: 'cursor-s-resize' },
-                                { h: 'se', pos: 'bottom-0 right-0 translate-x-1/2 translate-y-1/2', cursor: 'cursor-se-resize' }
-                            ].map(({ h, pos, cursor }) => (
-                                <div
-                                    key={h}
-                                    className={`absolute w-3 h-3 bg-white border border-blue-500 rounded-full z-40 ${pos} ${cursor}`}
-                                    onPointerDown={(e) => handleResizePointerDown(e, h, crop)}
-                                    onPointerMove={handleResizePointerMove}
-                                    onPointerUp={handleResizePointerUp}
-                                />
-                            ))}
-                        </>
-                    )}
-                </div>
-            );
+                                {/* Resize Handles */}
+                                {[
+                                    { h: 'nw', pos: 'top-0 left-0 -translate-x-1/2 -translate-y-1/2', cursor: 'cursor-nw-resize' },
+                                    { h: 'n', pos: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2', cursor: 'cursor-n-resize' },
+                                    { h: 'ne', pos: 'top-0 right-0 translate-x-1/2 -translate-y-1/2', cursor: 'cursor-ne-resize' },
+                                    { h: 'w', pos: 'top-1/2 left-0 -translate-x-1/2 -translate-y-1/2', cursor: 'cursor-w-resize' },
+                                    { h: 'e', pos: 'top-1/2 right-0 translate-x-1/2 -translate-y-1/2', cursor: 'cursor-e-resize' },
+                                    { h: 'sw', pos: 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2', cursor: 'cursor-sw-resize' },
+                                    { h: 's', pos: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2', cursor: 'cursor-s-resize' },
+                                    { h: 'se', pos: 'bottom-0 right-0 translate-x-1/2 translate-y-1/2', cursor: 'cursor-se-resize' }
+                                ].map(({ h, pos, cursor }) => (
+                                    <div
+                                        key={h}
+                                        className={`absolute w-3 h-3 bg-white border border-blue-500 rounded-full z-40 ${pos} ${cursor}`}
+                                        onPointerDown={(e) => handleResizePointerDown(e, h, crop)}
+                                        onPointerMove={handleResizePointerMove}
+                                        onPointerUp={handleResizePointerUp}
+                                    />
+                                ))}
+                            </>
+                        )}
+                    </div>
+                );
             })}
 
             {/* Currently Drawing Rect */}
@@ -479,4 +493,6 @@ export default function CropOverlay({ pageNum, scale, renderScale = 1.5, width, 
             )}
         </div>
     );
-}
+});
+
+export default CropOverlay;
