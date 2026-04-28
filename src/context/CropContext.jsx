@@ -39,7 +39,7 @@ export function CropProvider({ children }) {
     const removeCrop = useCallback((id) => {
         setCrops(prev => {
             const cropToRemove = prev.find(c => c.id === id);
-            if (cropToRemove && cropToRemove.imageUrl && cropToRemove.imageUrl.startsWith('blob:')) {
+            if (cropToRemove && typeof cropToRemove.imageUrl === 'string' && cropToRemove.imageUrl.startsWith('blob:')) {
                 URL.revokeObjectURL(cropToRemove.imageUrl);
             }
             return prev.filter(c => c.id !== id);
@@ -54,7 +54,7 @@ export function CropProvider({ children }) {
     const clearCrops = useCallback(() => {
         setCrops(prev => {
             prev.forEach(crop => {
-                if (crop.imageUrl && crop.imageUrl.startsWith('blob:')) {
+                if (typeof crop.imageUrl === 'string' && crop.imageUrl.startsWith('blob:')) {
                     URL.revokeObjectURL(crop.imageUrl);
                 }
             });

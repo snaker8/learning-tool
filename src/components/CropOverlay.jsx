@@ -145,7 +145,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
         }
     };
 
-    const handlePointerUp = (e) => {
+    const handlePointerUp = async (e) => {
         if (!isDrawing) return;
 
         setIsDrawing(false);
@@ -193,7 +193,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     const refinedPixelRects = AutoCropService.getMultiBlocks(canvas, pixelRect, adjustedSensitivity);
 
                     // 3. Add crop for EACH block found
-                    refinedPixelRects.forEach(rect => {
+                    for (const rect of refinedPixelRects) {
                         const finalRect = {
                             x: rect.x / renderScale,
                             y: rect.y / renderScale,
@@ -202,14 +202,14 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         };
 
                         if (finalRect.width > 5 && finalRect.height > 5) {
-                            const imageUrl = ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
+                            const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
                             addCrop({
                                 pageNum,
                                 ...finalRect,
                                 imageUrl
                             });
                         }
-                    });
+                    }
 
                     // Clear current rect and return, as we've already added crops
                     setCurrentRect(null);
@@ -229,7 +229,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     width: pixelRect.width / renderScale,
                     height: pixelRect.height / renderScale
                 };
-                const imageUrl = ImageGenerator.generateCropImage(canvas, finalRectNormalized, renderScale);
+                const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRectNormalized, renderScale);
 
                 addCrop({
                     pageNum,
@@ -280,14 +280,14 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
         setActiveCropOverride(newRect);
     };
 
-    const handleCropPointerUp = (e) => {
+    const handleCropPointerUp = async (e) => {
         if (isDragging) {
             setIsDragging(false);
 
             if (activeCropOverride) {
                 // Regenerate image on drag end
                 const finalRect = { x: activeCropOverride.x, y: activeCropOverride.y, width: activeCropOverride.width, height: activeCropOverride.height };
-                const imageUrl = ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
+                const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
                 updateCrop(selectedCropId, { ...finalRect, imageUrl });
                 setActiveCropOverride(null);
             }
@@ -327,14 +327,14 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
 
         window.addEventListener('keydown', handleKeyDown);
 
-        const handleKeyUp = (e) => {
+        const handleKeyUp = async (e) => {
             if (!selectedCropId) return;
             const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
             if (keys.includes(e.key)) {
                 const crop = crops.find(c => c.id === selectedCropId);
                 if (crop && canvas) {
                     const finalRect = { x: crop.x, y: crop.y, width: crop.width, height: crop.height };
-                    const imageUrl = ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
+                    const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
                     updateCrop(selectedCropId, { imageUrl });
                 }
             }
@@ -391,12 +391,12 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
         setActiveCropOverride(newRect);
     };
 
-    const handleResizePointerUp = (e) => {
+    const handleResizePointerUp = async (e) => {
         if (resizeState) {
             if (activeCropOverride) {
                 // Regenerate image on resize end
                 const finalRect = { x: activeCropOverride.x, y: activeCropOverride.y, width: activeCropOverride.width, height: activeCropOverride.height };
-                const imageUrl = ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
+                const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
                 updateCrop(resizeState.id, { ...finalRect, imageUrl });
                 setActiveCropOverride(null);
             }

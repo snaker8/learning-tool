@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, ZoomIn, ZoomOut, RotateCcw, FileText, FolderOpen, Loader2, Scissors, Sparkles } from 'lucide-react';
+import { Zap, ZoomIn, ZoomOut, RotateCcw, FileText, FolderOpen, Loader2, Scissors, Sparkles, Split, Image } from 'lucide-react';
 
 export default function Header({
     onZoomIn,
@@ -47,6 +47,26 @@ export default function Header({
                     >
                         <Sparkles className="w-4 h-4" />
                         답 추출기
+                    </button>
+                    <button
+                        onClick={() => onTabChange?.('splitter')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'splitter'
+                            ? 'bg-gradient-to-r from-indigo-600/80 to-violet-600/80 text-white shadow-lg shadow-indigo-500/20'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        <Split className="w-4 h-4" />
+                        PDF 분할기
+                    </button>
+                    <button
+                        onClick={() => onTabChange?.('toimage')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'toimage'
+                            ? 'bg-gradient-to-r from-cyan-600/80 to-blue-600/80 text-white shadow-lg shadow-cyan-500/20'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        <Image className="w-4 h-4" />
+                        이미지 변환
                     </button>
                 </div>
             </div>

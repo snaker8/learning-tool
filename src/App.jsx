@@ -3,12 +3,14 @@ import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import PdfViewer from './components/PdfViewer' // Disabled for build test
 import AnswerExtractor from './components/AnswerExtractor'
+import PdfSplitter from './components/PdfSplitter'
+import PdfToImage from './components/PdfToImage'
 import { CropProvider } from './context/CropContext'
 
 function App() {
   const [zoomScale, setZoomScale] = useState(1.5);
   const [pdfFile, setPdfFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('maker'); // 'maker' | 'extractor'
+  const [activeTab, setActiveTab] = useState('maker'); // 'maker' | 'extractor' | 'splitter' | 'toimage'
 
   const handleOpenFile = (e) => {
     const file = e.target.files[0];
@@ -69,9 +71,19 @@ function App() {
               {/* Right: Sidebar (Fixed Width) */}
               <Sidebar />
             </>
-          ) : (
+          ) : activeTab === 'extractor' ? (
             /* Answer Extractor Mode */
             <AnswerExtractor />
+          ) : activeTab === 'splitter' ? (
+            /* PDF Splitter Mode */
+            <div className="flex-1 overflow-hidden">
+              <PdfSplitter />
+            </div>
+          ) : (
+            /* PDF to Image Mode */
+            <div className="flex-1 overflow-hidden">
+              <PdfToImage />
+            </div>
           )}
         </div>
 
