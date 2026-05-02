@@ -10,7 +10,19 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist_test
 *.local
+
+# Firebase
+.firebase/
+.runtimeconfig.json
+
+# Claude Code
+.claude/
+
+# Temp / debug artifacts
+dummy.pdf
+build_*.txt
 
 # Editor directories and files
 .vscode/*

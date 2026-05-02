@@ -1,5 +1,13 @@
 import React from 'react';
-import { Zap, ZoomIn, ZoomOut, RotateCcw, FileText, FolderOpen, Loader2, Scissors, Sparkles, Split, Image } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ZoomIn, ZoomOut, RotateCcw, FileText, FolderOpen, Loader2, Scissors, Sparkles, Split, ArrowLeftRight } from 'lucide-react';
+
+const TABS = [
+    { id: 'maker', label: '판서 제작기', Icon: Scissors },
+    { id: 'extractor', label: '답 추출기', Icon: Sparkles },
+    { id: 'splitter', label: 'PDF 분할기', Icon: Split },
+    { id: 'toimage', label: 'PDF ↔ 이미지', Icon: ArrowLeftRight },
+];
 
 export default function Header({
     onZoomIn,
@@ -8,113 +16,107 @@ export default function Header({
     onOpenPageModal,
     onOpenFile,
     zoomLevel = 'Fit',
-    fileName,
     isLoading = false,
     activeTab = 'maker',
-    onTabChange
+    onTabChange,
 }) {
     return (
-        <header className="fixed top-0 left-0 right-0 h-16 bg-black/20 backdrop-blur-xl border-b border-white/5 shadow-2xl z-50 flex items-center justify-between px-6 text-slate-100 transition-all">
-            {/* Logo & Title */}
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3 group">
-                    <div className="p-1.5 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-500/20 group-hover:border-blue-500/50 transition-colors">
-                        <Zap className="w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
+        <header className="fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between pl-5 pr-4 glass-strong">
+            {/* Brand + Tabs */}
+            <div className="flex items-center gap-6">
+                {/* Wordmark — editorial, tight */}
+                <div className="flex items-center gap-2.5 select-none">
+                    <Mark />
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-[15px] font-semibold tracking-tight text-zinc-100">
+                            Learning Tool
+                        </span>
+                        <span className="text-[15px] font-light tracking-tight text-zinc-500 italic">
+                            Studio
+                        </span>
                     </div>
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent tracking-tight">
-                        Learning Tool Studio
-                    </h1>
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="flex items-center gap-1 bg-black/40 rounded-xl p-1 border border-white/5 ml-4">
-                    <button
-                        onClick={() => onTabChange?.('maker')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'maker'
-                            ? 'bg-gradient-to-r from-blue-600/80 to-indigo-600/80 text-white shadow-lg shadow-blue-500/20'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
-                    >
-                        <Scissors className="w-4 h-4" />
-                        판서 제작기
-                    </button>
-                    <button
-                        onClick={() => onTabChange?.('extractor')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'extractor'
-                            ? 'bg-gradient-to-r from-violet-600/80 to-purple-600/80 text-white shadow-lg shadow-violet-500/20'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
-                    >
-                        <Sparkles className="w-4 h-4" />
-                        답 추출기
-                    </button>
-                    <button
-                        onClick={() => onTabChange?.('splitter')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'splitter'
-                            ? 'bg-gradient-to-r from-indigo-600/80 to-violet-600/80 text-white shadow-lg shadow-indigo-500/20'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
-                    >
-                        <Split className="w-4 h-4" />
-                        PDF 분할기
-                    </button>
-                    <button
-                        onClick={() => onTabChange?.('toimage')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'toimage'
-                            ? 'bg-gradient-to-r from-cyan-600/80 to-blue-600/80 text-white shadow-lg shadow-cyan-500/20'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
-                    >
-                        <Image className="w-4 h-4" />
-                        이미지 변환
-                    </button>
-                </div>
+                {/* Hairline divider */}
+                <div className="w-px h-6 bg-white/10" />
+
+                {/* Tabs — single accent with sliding indicator */}
+                <nav className="flex items-center gap-0.5">
+                    {TABS.map(({ id, label, Icon }) => {
+                        const isActive = activeTab === id;
+                        return (
+                            <button
+                                key={id}
+                                onClick={() => onTabChange?.(id)}
+                                className={`relative press flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium transition-colors ${
+                                    isActive
+                                        ? 'text-amber-300'
+                                        : 'text-zinc-400 hover:text-zinc-100'
+                                }`}
+                            >
+                                {isActive && (
+                                    <motion.span
+                                        layoutId="tab-active"
+                                        className="absolute inset-0 rounded-lg bg-amber-400/[0.08] border border-amber-400/20"
+                                        style={{
+                                            boxShadow: 'inset 0 1px 0 rgba(252, 211, 77, 0.12), 0 0 24px -8px rgba(251, 191, 36, 0.4)',
+                                        }}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                                    />
+                                )}
+                                <Icon className="w-3.5 h-3.5 relative z-10" strokeWidth={2} />
+                                <span className="relative z-10">{label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
             </div>
 
-            {/* Controls - Only show for maker tab */}
+            {/* Right controls — only on maker tab */}
             {activeTab === 'maker' && (
-                <div className="flex items-center gap-4">
-                    {/* Zoom Controls */}
-                    <div className="flex items-center gap-1 bg-black/40 rounded-lg px-2 py-1.5 border border-white/5 shadow-inner">
-                        <button onClick={onZoomOut} className="p-1.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-all active:scale-95">
-                            <ZoomOut className="w-4 h-4" />
-                        </button>
-                        <span className="text-xs font-mono w-14 text-center text-slate-300 select-none tabular-nums">
+                <div className="flex items-center gap-2.5">
+                    {/* Zoom cluster */}
+                    <div className="flex items-center h-9 rounded-lg glass overflow-hidden">
+                        <IconBtn onClick={onZoomOut} aria-label="축소">
+                            <ZoomOut className="w-3.5 h-3.5" />
+                        </IconBtn>
+                        <div className="w-px h-4 bg-white/8" />
+                        <span className="numeral text-[12px] text-zinc-300 px-3 select-none min-w-[52px] text-center">
                             {typeof zoomLevel === 'number' ? `${Math.round(zoomLevel * 100)}%` : zoomLevel}
                         </span>
-                        <button onClick={onZoomIn} className="p-1.5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-all active:scale-95">
-                            <ZoomIn className="w-4 h-4" />
-                        </button>
-                        <div className="w-px h-4 bg-white/10 mx-1"></div>
-                        <button onClick={onZoomReset} className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-md transition-all" title="Reset Zoom">
-                            <RotateCcw className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="w-px h-4 bg-white/8" />
+                        <IconBtn onClick={onZoomIn} aria-label="확대">
+                            <ZoomIn className="w-3.5 h-3.5" />
+                        </IconBtn>
+                        <div className="w-px h-4 bg-white/8" />
+                        <IconBtn onClick={onZoomReset} aria-label="초기화" accent>
+                            <RotateCcw className="w-3 h-3" />
+                        </IconBtn>
                     </div>
 
-                    {/* Page Modal Button */}
+                    {/* Page navigator */}
                     <button
                         onClick={onOpenPageModal}
-                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm transition-all border border-white/5 hover:border-white/10 group shadow-sm active:scale-95"
+                        className="press h-9 flex items-center gap-2 px-3 rounded-lg glass hover:bg-white/[0.045] transition-colors group"
                     >
-                        <FileText className="w-4 h-4 text-slate-400 group-hover:text-blue-400 transition-colors" />
-                        <span className="text-slate-300 group-hover:text-slate-100 font-medium">페이지</span>
-                        <span className="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.5 rounded border border-blue-500/20 font-mono">
+                        <FileText className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-200 transition-colors" strokeWidth={1.75} />
+                        <span className="text-[12px] text-zinc-300 font-medium">페이지</span>
+                        <span className="numeral text-[10px] px-1.5 py-px rounded bg-white/5 border border-white/8 text-zinc-400">
                             All
                         </span>
                     </button>
 
-                    {/* Loading Spinner */}
                     {isLoading && (
-                        <div className="flex items-center gap-2 text-sm">
-                            <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />
-                            <span className="text-yellow-400">분석중...</span>
+                        <div className="flex items-center gap-2 text-[12px] px-2.5 h-9 rounded-lg glass">
+                            <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" strokeWidth={2} />
+                            <span className="text-amber-300/90 font-medium">분석 중</span>
                         </div>
                     )}
 
-                    {/* File Open */}
-                    <label className="flex items-center gap-2 bg-gradient-to-r from-blue-600/90 to-indigo-600/90 hover:from-blue-500 hover:to-indigo-500 text-white px-4 py-2 rounded-lg font-bold cursor-pointer transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 border border-white/10 group">
-                        <FolderOpen className="w-4 h-4 group-hover:animate-bounce" />
-                        <span className="text-sm tracking-wide">PDF 열기</span>
+                    {/* Primary CTA — single accent */}
+                    <label className="press h-9 flex items-center gap-2 pl-3 pr-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold cursor-pointer transition-colors shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_24px_-6px_rgba(251,191,36,0.6)] group">
+                        <FolderOpen className="w-3.5 h-3.5" strokeWidth={2.25} />
+                        <span className="text-[13px] tracking-tight">PDF 열기</span>
                         <input
                             type="file"
                             accept="application/pdf"
@@ -125,5 +127,53 @@ export default function Header({
                 </div>
             )}
         </header>
+    );
+}
+
+/* — — — Subcomponents — — — */
+
+function IconBtn({ children, accent, ...props }) {
+    return (
+        <button
+            {...props}
+            className={`press h-full px-2.5 flex items-center justify-center transition-colors ${
+                accent
+                    ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/[0.08]'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+            }`}
+        >
+            {children}
+        </button>
+    );
+}
+
+/* Editorial mark — geometric, not generic icon */
+function Mark() {
+    return (
+        <div className="relative w-7 h-7 flex items-center justify-center">
+            <svg viewBox="0 0 28 28" className="w-7 h-7" aria-hidden>
+                <defs>
+                    <linearGradient id="markGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#fcd34d" />
+                        <stop offset="100%" stopColor="#d97706" />
+                    </linearGradient>
+                </defs>
+                <rect
+                    x="2.5" y="2.5" width="23" height="23" rx="6"
+                    fill="none"
+                    stroke="url(#markGrad)"
+                    strokeWidth="1.5"
+                    opacity="0.9"
+                />
+                <path
+                    d="M9 18 L14 9 L19 18 M11 14 L17 14"
+                    stroke="url(#markGrad)"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                />
+            </svg>
+        </div>
     );
 }

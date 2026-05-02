@@ -20,7 +20,7 @@ export function CropProvider({ children }) {
         sensitivity: 30,
         mergeWidth: 800,
         mergeGap: 50,
-        renderScale: 2.0  // PDF 렌더링 해상도 (1.0 ~ 6.0) - 최적화를 위해 2.0으로 하향 조정
+        renderScale: 3.0  // PDF 렌더링 해상도 (1.0 ~ 6.0)
     });
 
     const updateSettings = useCallback((updates) => {

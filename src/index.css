@@ -1,24 +1,148 @@
 @import "tailwindcss";
 
 :root {
-  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  /* Type stacks */
+  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, 'SFMono-Regular',
+    Menlo, Consolas, monospace;
+
+  /* Surface tokens — warm-leaning neutrals (not slate) */
+  --bg-base: #0a0a0b;
+  --bg-raised: #131316;
+  --bg-sunken: #07070a;
+  --hairline: rgba(255, 255, 255, 0.06);
+  --hairline-strong: rgba(255, 255, 255, 0.10);
+  --hairline-bright: rgba(255, 255, 255, 0.16);
+
+  /* Single accent — warm amber (Supanova-approved, distinctive) */
+  --accent: #fbbf24;        /* amber-400 */
+  --accent-bright: #fcd34d; /* amber-300 */
+  --accent-deep: #d97706;   /* amber-600 */
+  --accent-glow: 251, 191, 36;
+
+  /* Semantic */
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa; /* zinc-400 */
+  --text-tertiary: #71717a;  /* zinc-500 */
+  --text-muted: #52525b;     /* zinc-600 */
+
+  --success: #34d399;
+  --danger: #f87171;
+
+  font-family: var(--font-sans);
   color-scheme: dark;
+  font-feature-settings: 'ss03', 'cv11', 'tnum';
+  font-synthesis: none;
 }
 
-body {
+html, body {
   margin: 0;
-  background-color: #0f172a;
-  /* Slate 900 */
-  color: #f8fafc;
-  /* Slate 50 */
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   overflow: hidden;
-  /* App handles scrolling */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Custom Scrollbar */
+/* Korean typography baseline */
+:lang(ko), html[lang="ko"], body, h1, h2, h3, h4, h5, h6, p, span, label, button, a, li {
+  word-break: keep-all;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Mono utility for numerics, keys, codes */
+.font-mono, .mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum', 'zero', 'ss01';
+  letter-spacing: -0.01em;
+}
+
+/* Numeric / metric — Geist Mono with refined weight */
+.numeral {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Editorial caption — small, tracked, uppercase */
+.eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* Section number — editorial "01 / 02 /" style */
+.section-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* Liquid glass surface (Supanova rule 4) */
+.glass {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--hairline);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glass-strong {
+  background: rgba(20, 20, 23, 0.72);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--hairline);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 32px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Background atmosphere — single warm spotlight + grain */
+.app-canvas {
+  position: relative;
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%,
+      rgba(251, 191, 36, 0.06) 0%,
+      rgba(251, 191, 36, 0.02) 35%,
+      transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 100%,
+      rgba(120, 113, 108, 0.04) 0%,
+      transparent 60%);
+}
+
+/* Fine grain overlay (Supanova rule 4) */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+}
+
+/* Custom Scrollbar — visible enough to find on dark surfaces, still restrained */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -26,15 +150,194 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(251, 191, 36, 0.55); /* amber-400 / 55% */
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgba(251, 191, 36, 0.75);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Custom Red Crosshair Cursor */
 .cursor-custom-crosshair {
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="white" stroke-width="4" d="M12,1 L12,23 M1,12 L23,12" opacity="0.8"/><path fill="none" stroke="red" stroke-width="2" d="M12,1 L12,23 M1,12 L23,12"/></svg>') 12 12, crosshair;
+}
+
+/* Form controls — refined */
+input[type="number"],
+input[type="text"] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  height: 2px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--hairline-strong);
+  border-radius: 999px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-base);
+  box-shadow: 0 0 0 1px var(--hairline-strong), 0 0 12px rgba(var(--accent-glow), 0.4);
+  cursor: grab;
+  transition: transform 120ms ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-base);
+  cursor: grab;
+}
+
+/* Selection */
+::selection {
+  background: rgba(var(--accent-glow), 0.28);
+  color: var(--accent-bright);
+}
+
+/* Focus ring — accent, refined */
+.focus-ring {
+  outline: none;
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.focus-ring:focus-visible {
+  border-color: rgba(var(--accent-glow), 0.5);
+  box-shadow: 0 0 0 3px rgba(var(--accent-glow), 0.18);
+}
+
+/* Subtle press feedback */
+.press {
+  transition: transform 90ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Dotted micro pattern (used in crop preview backgrounds) */
+.dot-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+/* Hairline divider */
+.hairline {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--hairline-strong), transparent);
+  border: 0;
+}
+
+/* Float animation — subtle */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Stagger reveal */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  animation: reveal 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* — Premium component classes (used across PDF tools) — */
+
+.premium-panel {
+  background: rgba(20, 20, 23, 0.55);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 24px -8px rgba(0, 0, 0, 0.45);
+}
+
+.premium-btn-primary {
+  background: var(--accent);
+  color: #18181b; /* zinc-900 */
+  font-weight: 600;
+  border-radius: 10px;
+  letter-spacing: -0.01em;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 0 24px -6px rgba(var(--accent-glow), 0.55);
+  transition:
+    background-color 120ms ease,
+    transform 90ms ease,
+    box-shadow 200ms ease;
+}
+
+.premium-btn-primary:hover:not(:disabled) {
+  background: var(--accent-bright);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 32px -4px rgba(var(--accent-glow), 0.7);
+}
+
+.premium-btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.premium-btn-primary:disabled {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border-color: var(--hairline);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.premium-btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  font-weight: 500;
+  transition: background-color 120ms ease, color 120ms ease, transform 90ms ease, border-color 120ms ease;
+}
+
+.premium-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--hairline-strong);
+  color: var(--text-primary);
+}
+
+.premium-btn-secondary:active:not(:disabled) {
+  transform: scale(0.98);
 }

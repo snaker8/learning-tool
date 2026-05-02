@@ -168,11 +168,11 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
     return (
         <div id={`page-${pageNum}`} ref={containerRef} className="relative group shadow-2xl rounded-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 bg-white min-h-[800px] w-full max-w-[800px] flex flex-col items-center justify-center">
             {!shouldMount ? (
-                <div className="text-slate-400 text-sm">Waiting to load Page {pageNum}...</div>
+                <div className="text-zinc-400 text-sm mono">Page {pageNum} 대기 중…</div>
             ) : !isRendered ? (
-                <div className="flex flex-col items-center justify-center gap-4 animate-pulse">
-                    <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-blue-500 animate-spin"></div>
-                    <div className="text-slate-500 font-medium">Loading Page {pageNum}...</div>
+                <div className="flex flex-col items-center justify-center gap-4">
+                    <div className="w-10 h-10 rounded-full border-2 border-zinc-200 border-t-amber-400 animate-spin"></div>
+                    <div className="text-zinc-500 font-medium mono text-[12px]">Loading Page {pageNum}…</div>
                 </div>
             ) : null}
             <canvas
@@ -194,23 +194,23 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
             )}
 
             {/* Page Controls Overlay */}
-            <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+            <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-50">
                 <button
                     onClick={runAutoCrop}
-                    className="bg-black/50 hover:bg-purple-500 text-white p-1.5 rounded-md backdrop-blur-sm transition-all shadow-sm"
+                    className="press bg-black/55 hover:bg-amber-400 hover:text-zinc-950 text-white p-1.5 rounded-md backdrop-blur-md border border-white/10 transition-colors"
                     title="문제 자동 인식"
                 >
-                    <Wand2 className="w-4 h-4" />
+                    <Wand2 className="w-3.5 h-3.5" strokeWidth={1.75} />
                 </button>
                 <button
                     onClick={handleFullPageCrop}
-                    className="bg-black/50 hover:bg-blue-500 text-white p-1.5 rounded-md backdrop-blur-sm transition-all shadow-sm"
+                    className="press bg-black/55 hover:bg-amber-400 hover:text-zinc-950 text-white p-1.5 rounded-md backdrop-blur-md border border-white/10 transition-colors"
                     title="전체 페이지 선택"
                 >
-                    <Scan className="w-4 h-4" />
+                    <Scan className="w-3.5 h-3.5" strokeWidth={1.75} />
                 </button>
-                <div className="bg-black/50 text-white text-xs px-2 py-1.5 rounded-md backdrop-blur-sm font-medium">
-                    Page {pageNum}
+                <div className="numeral bg-black/55 text-white text-[11px] px-2 py-1 rounded-md backdrop-blur-md border border-white/10 font-medium">
+                    P. {pageNum}
                 </div>
             </div>
         </div>
@@ -337,26 +337,27 @@ export default function PdfViewer({ file, zoomScale }) {
     }, [pdfDoc, rotation, RENDER_SCALE, settings.autoCrop, settings.sensitivity, addCrop]);
 
     return (
-        <div className="flex flex-col items-center gap-8 py-8 w-full max-w-[1200px]">
+        <div className="flex flex-col items-center gap-8 py-2 w-full max-w-[1200px]">
             {/* Global Toolbar */}
-            <div className="flex gap-4 mb-4 items-center bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 w-full justify-between">
-                <div className="text-white font-bold text-lg">
-                    PDF Preview
+            <div className="glass-strong flex items-center justify-between px-5 py-3 rounded-xl w-full">
+                <div className="flex items-center gap-3">
+                    <span className="section-num">PREVIEW</span>
+                    <div className="text-zinc-100 font-semibold text-[14px] tracking-tight">PDF</div>
                 </div>
                 <button
                     onClick={handleRotate}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="press flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 px-3.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
                 >
-                    <RotateCw className="w-4 h-4" />
-                    <span>회전 ({rotation}°)</span>
+                    <RotateCw className="w-3.5 h-3.5" strokeWidth={2} />
+                    <span>회전 <span className="numeral text-amber-300">{rotation}°</span></span>
                 </button>
             </div>
 
             {isProcessing && (
-                <div className="fixed inset-0 z-[300] bg-black/50 flex flex-col items-center justify-center text-white backdrop-blur-sm">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                    <div className="text-xl font-bold">전체 페이지 처리 중...</div>
-                    <div className="text-sm text-slate-300">잠시만 기다려주세요</div>
+                <div className="fixed inset-0 z-[300] bg-black/70 flex flex-col items-center justify-center text-white backdrop-blur-md">
+                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-700 border-t-amber-400 mb-4"></div>
+                    <div className="text-[15px] font-semibold tracking-tight">전체 페이지 처리 중</div>
+                    <div className="text-[12px] text-zinc-400 mt-1">잠시만 기다려주세요</div>
                 </div>
             )}
 

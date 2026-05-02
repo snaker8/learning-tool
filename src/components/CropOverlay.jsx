@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useCropContext } from '../context/CropContext';
 import { ImageGenerator } from '../services/ImageGenerator';
 import { AutoCropService } from '../services/AutoCropService';
@@ -13,9 +13,14 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
     const [currentRect, setCurrentRect] = useState(null);
     const containerRef = useRef(null);
     const [activeCropOverride, setActiveCropOverride] = useState(null);
-    const [actualScale, setActualScale] = useState(1);
+    // null = not yet measured. We must not render existing crops until measured,
+    // otherwise they flash at wrong size on every (re)mount during scroll.
+    const [actualScale, setActualScale] = useState(null);
 
-    useEffect(() => {
+    // useLayoutEffect runs synchronously after DOM mutations and BEFORE paint,
+    // so the first measurement lands in time for the first paint and we avoid
+    // a one-frame flicker on every IntersectionObserver-driven remount.
+    useLayoutEffect(() => {
         if (!containerRef.current || !canvas) return;
 
         const updateScale = () => {
@@ -26,7 +31,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
             }
         };
 
-        updateScale(); // Initial call
+        updateScale();
 
         const observer = new ResizeObserver(updateScale);
         observer.observe(containerRef.current);
@@ -415,8 +420,8 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
         >
-            {/* Existing Crops */}
-            {pageCrops.map(originalCrop => {
+            {/* Existing Crops — gated on a real measurement to avoid flicker on remount */}
+            {actualScale !== null && pageCrops.map(originalCrop => {
                 const crop = (activeCropOverride && activeCropOverride.id === originalCrop.id)
                     ? { ...originalCrop, ...activeCropOverride }
                     : originalCrop;

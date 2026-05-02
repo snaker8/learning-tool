@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Scissors, Settings, GripVertical, Trash2, Maximize2, Layers, Loader2, Check, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Scissors, Settings, GripVertical, Trash2, Maximize2, Layers, Loader2, Check, X, ChevronRight, ChevronLeft, FileStack } from 'lucide-react';
 import { useCropContext } from '../context/CropContext';
 import { MergeService } from '../services/MergeService';
 import { Reorder, AnimatePresence, motion } from 'framer-motion';
@@ -11,7 +11,6 @@ export default function Sidebar() {
         settings, updateSettings, clearCrops, reorderCrops
     } = useCropContext();
 
-    // Destructure for easier access
     const {
         copyWidth, maxHeight, useMaxHeight,
         isGlobalMode, autoCrop, sensitivity,
@@ -19,18 +18,17 @@ export default function Sidebar() {
     } = settings;
 
     const [isMerging, setIsMerging] = useState(false);
-    const [mergeStatus, setMergeStatus] = useState(null); // 'success', 'error'
+    const [mergeStatus, setMergeStatus] = useState(null);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
-    const [copiedId, setCopiedId] = useState(null); // Feedback for quick copy
+    const [copiedId, setCopiedId] = useState(null);
 
-    // 순차 복사 관련 상태
     const [sequentialIndex, setSequentialIndex] = useState(0);
     const [isSequentialMode, setIsSequentialMode] = useState(false);
 
     const handleSortCrops = () => {
         const sorted = [...crops].sort((a, b) => {
             if (a.pageNum !== b.pageNum) return a.pageNum - b.pageNum;
-            return a.y - b.y; // Sort by vertical position
+            return a.y - b.y;
         });
         reorderCrops(sorted);
     };
@@ -80,7 +78,6 @@ export default function Sidebar() {
         }
     };
 
-    // 순차 복사 시작
     const handleStartSequentialCopy = () => {
         if (crops.length === 0) return;
         setSequentialIndex(0);
@@ -113,7 +110,6 @@ export default function Sidebar() {
         }
     };
 
-    // 다음 복사
     const handleNextCopy = () => {
         const nextIndex = sequentialIndex + 1;
         if (nextIndex >= crops.length) {
@@ -125,156 +121,146 @@ export default function Sidebar() {
         handleSequentialCopy(nextIndex);
     };
 
-    // 순차 복사 종료
     const handleStopSequentialCopy = () => {
         setIsSequentialMode(false);
         setSequentialIndex(0);
     };
 
     const [isManageMode, setIsManageMode] = useState(false);
-    const [viewMode, setViewMode] = useState('list'); // Default to list for reordering
+    const [viewMode, setViewMode] = useState('list');
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <aside className={`${isCollapsed ? 'w-12 border-l-0' : 'w-[420px]'} bg-black/40 backdrop-blur-2xl shadow-2xl border-l border-white/5 flex flex-col h-full z-40 shrink-0 transition-all duration-300 relative`}>
-
-            {/* Collapse Toggle */}
+        <aside
+            className={`${isCollapsed ? 'w-12' : 'w-[420px]'} relative shrink-0 z-40 flex flex-col h-full transition-[width] duration-300 ease-out
+                bg-[rgba(13,13,16,0.7)] backdrop-blur-2xl border-l border-white/[0.06]`}
+        >
+            {/* Collapse handle — refined */}
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute -left-3 top-1/2 -translate-y-1/2 bg-slate-800 text-slate-300 hover:text-white p-1 rounded-full border border-slate-600 shadow-xl z-50 transition-transform hover:scale-110"
+                className="press absolute -left-3 top-20 z-50 w-6 h-6 rounded-full glass flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-white/20 transition-colors"
                 title={isCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
             >
-                {isCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                {isCollapsed ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
             </button>
 
             {!isCollapsed ? (
                 <>
-
-
-                    {/* 1. Copy Settings */}
-                    <div className="p-4 bg-white/5 border-b border-white/5 shrink-0 backdrop-blur-sm">
-                        <div className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                            <Scissors className="w-3.5 h-3.5 text-blue-400" />
-                            <span>개별 복사 설정 (Ctrl+C)</span>
-                        </div>
-                        <div className="flex items-end gap-3">
-                            <div className="flex-1 space-y-1.5">
-                                <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">가로 (px)</label>
+                    {/* §01 — Copy Settings */}
+                    <Section num="01" title="개별 복사 설정" hint="Ctrl+C" Icon={Scissors}>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Field label="가로 (px)">
                                 <input
                                     type="number"
                                     value={copyWidth}
                                     onChange={(e) => updateSettings({ copyWidth: Number(e.target.value) })}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-center text-slate-200 focus:border-blue-500/50 focus:bg-blue-500/5 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all"
+                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10"
                                 />
-                            </div>
-                            <div className="flex-1 space-y-1">
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">세로 제한</label>
+                            </Field>
+                            <Field
+                                label="세로 제한"
+                                trailing={
                                     <input
                                         type="checkbox"
                                         checked={useMaxHeight}
                                         onChange={(e) => updateSettings({ useMaxHeight: e.target.checked })}
-                                        className="accent-blue-600 w-3.5 h-3.5 cursor-pointer"
+                                        className="accent-amber-400 w-3.5 h-3.5 cursor-pointer"
                                     />
-                                </div>
+                                }
+                            >
                                 <input
                                     type="number"
                                     value={maxHeight}
                                     disabled={!useMaxHeight}
                                     onChange={(e) => updateSettings({ maxHeight: Number(e.target.value) })}
-                                    className="w-full bg-white/80 border border-slate-200 rounded px-2 py-1.5 text-sm text-center disabled:bg-slate-100 disabled:text-slate-400 focus:border-blue-500 outline-none transition-all"
+                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-white/[0.06]"
                                 />
-                            </div>
+                            </Field>
                         </div>
-                    </div>
+                    </Section>
 
-                    {/* 2. Auto Settings */}
-                    <div className="p-4 bg-white/[0.02] border-b border-white/5 shrink-0 backdrop-blur-sm">
-                        <h2 className="font-bold text-slate-400 text-xs mb-3 flex items-center gap-2 uppercase tracking-wider">
-                            <Settings className="w-3.5 h-3.5 text-purple-400" />
-                            <span>설정</span>
-                        </h2>
-
-                        <div className="mb-3 bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20 hover:bg-indigo-500/15 transition-colors">
-                            <label className="flex items-center justify-between cursor-pointer group select-none">
-                                <span className="text-xs font-bold text-indigo-300 flex items-center gap-2">
-                                    <span className="text-lg">📋</span>
-                                    <span>일괄 이미지 모드</span>
-                                </span>
-                                <div className="relative">
-                                    <input
-                                        type="checkbox"
-                                        checked={isGlobalMode}
-                                        onChange={(e) => updateSettings({ isGlobalMode: e.target.checked })}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-10 h-5 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500 shadow-inner"></div>
+                    {/* §02 — Detection Settings */}
+                    <Section num="02" title="설정" Icon={Settings}>
+                        {/* Toggle card — 일괄 모드 */}
+                        <button
+                            onClick={() => updateSettings({ isGlobalMode: !isGlobalMode })}
+                            className={`press w-full text-left rounded-xl border transition-all p-3.5 ${
+                                isGlobalMode
+                                    ? 'bg-amber-400/[0.06] border-amber-400/25'
+                                    : 'bg-white/[0.02] border-white/[0.06] hover:border-white/10'
+                            }`}
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <FileStack className={`w-3.5 h-3.5 ${isGlobalMode ? 'text-amber-300' : 'text-zinc-500'}`} strokeWidth={1.75} />
+                                        <span className={`text-[13px] font-semibold ${isGlobalMode ? 'text-amber-200' : 'text-zinc-300'}`}>
+                                            일괄 이미지 모드
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">
+                                        선택한 범위를 모든 페이지에서 개별 검사
+                                    </p>
                                 </div>
-                            </label>
-                            <p className="text-[10px] text-indigo-400/70 mt-1.5 pl-7 leading-snug">
-                                * 선택한 <b>범위</b>를 모든 페이지에서 개별 검사
-                            </p>
-                        </div>
+                                <Toggle on={isGlobalMode} />
+                            </div>
+                        </button>
 
-                        <div className="space-y-3">
-                            <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
+                        <div className="mt-3 space-y-3">
+                            <label className="flex items-center gap-2.5 cursor-pointer select-none group">
                                 <input
                                     type="checkbox"
                                     checked={autoCrop}
                                     onChange={(e) => updateSettings({ autoCrop: e.target.checked })}
-                                    className="accent-blue-500 w-4 h-4 rounded"
+                                    className="accent-amber-400 w-4 h-4 rounded cursor-pointer"
                                 />
-                                <span>문제 자동 인식 & 분할</span>
+                                <span className="text-[13px] font-medium text-zinc-200 group-hover:text-zinc-50 transition-colors">
+                                    문제 자동 인식 & 분할
+                                </span>
                             </label>
 
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-xs text-slate-400">
-                                    <span>민감도</span>
-                                    <span className="font-bold text-blue-400 tabular-nums">{sensitivity}</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="10"
-                                    max="100"
-                                    value={sensitivity}
-                                    onChange={(e) => updateSettings({ sensitivity: Number(e.target.value) })}
-                                    className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                />
-                            </div>
+                            <Slider
+                                label="민감도"
+                                value={sensitivity}
+                                min={10}
+                                max={100}
+                                onChange={(v) => updateSettings({ sensitivity: v })}
+                            />
 
-                            <div className="space-y-2 pt-2 border-t border-white/5">
-                                <div className="flex justify-between text-xs text-slate-400">
-                                    <span>PDF 해상도</span>
-                                    <span className="font-bold text-emerald-400 tabular-nums">{renderScale?.toFixed(1) || '3.0'}x</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="1.0"
-                                    max="6.0"
-                                    step="0.5"
+                            <div className="pt-3 border-t border-white/[0.05]">
+                                <Slider
+                                    label="PDF 해상도"
                                     value={renderScale || 3.0}
-                                    onChange={(e) => updateSettings({ renderScale: Number(e.target.value) })}
-                                    className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                    min={1.0}
+                                    max={6.0}
+                                    step={0.5}
+                                    format={(v) => `${v.toFixed(1)}x`}
+                                    onChange={(v) => updateSettings({ renderScale: v })}
                                 />
-                                <p className="text-[10px] text-slate-500">* 높을수록 고화질 (메모리 사용 증가)</p>
+                                <p className="text-[10px] text-zinc-600 mt-2 leading-relaxed">
+                                    높을수록 고화질 — 메모리 사용 증가
+                                </p>
                             </div>
                         </div>
-                    </div>
+                    </Section>
 
-                    {/* 3. List Header */}
-                    <div className="px-4 py-3 bg-white/5 border-b border-white/5 flex justify-between items-center shadow-sm z-10 shrink-0 backdrop-blur-sm">
-                        <div>
-                            <h2 className="font-bold text-slate-200 text-sm flex items-center gap-2">
+                    {/* §03 — List header */}
+                    <div className="px-5 py-3.5 flex items-center justify-between border-y border-white/[0.05] shrink-0 bg-white/[0.015]">
+                        <div className="flex items-center gap-3">
+                            <span className="section-num">03</span>
+                            <h2 className="text-[13px] font-semibold text-zinc-100">
                                 문제 목록
-                                <span className="bg-blue-500/20 text-blue-300 border border-blue-500/20 text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{crops.length}</span>
                             </h2>
+                            <span className="numeral text-[11px] px-1.5 py-px rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
+                                {crops.length}
+                            </span>
                         </div>
                         <div className="flex gap-1.5 items-center">
                             <button
                                 onClick={() => setIsManageMode(true)}
-                                className="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md border border-blue-500 transition-all shadow-lg hover:shadow-blue-500/20"
+                                className="press flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-md text-zinc-300 bg-white/5 hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 transition-colors"
                             >
-                                <Maximize2 className="w-3 h-3" />
+                                <Maximize2 className="w-3 h-3" strokeWidth={2} />
                                 <span>전체확대</span>
                             </button>
                             <button
@@ -283,27 +269,27 @@ export default function Sidebar() {
                                         clearCrops();
                                     }
                                 }}
-                                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                                className="press flex items-center gap-1 text-[11px] text-zinc-500 hover:text-red-400 hover:bg-red-500/[0.06] px-2 py-1.5 rounded-md transition-colors"
                             >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="w-3 h-3" strokeWidth={2} />
                                 <span>전체 삭제</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* 4. List (Reorderable) */}
-                    <div className="flex-1 overflow-y-auto p-3 bg-black/10 min-h-0 custom-scrollbar relative">
+                    {/* §03 — List */}
+                    <div className="flex-1 overflow-y-auto px-3 py-3 min-h-0 custom-scrollbar">
                         {crops.length === 0 ? (
-                            <div className="border-2 border-dashed border-white/10 rounded-xl h-40 flex flex-col items-center justify-center text-slate-500 gap-3 hover:border-white/20 hover:bg-white/5 transition-all group">
-                                <GripVertical className="w-8 h-8 opacity-30 group-hover:opacity-50 transition-opacity" />
-                                <span className="text-xs font-medium">드래그하여 문제를 선택하세요</span>
+                            <div className="border border-dashed border-white/[0.08] rounded-xl h-44 flex flex-col items-center justify-center text-zinc-600 gap-3 hover:border-white/15 hover:bg-white/[0.02] transition-colors group">
+                                <GripVertical className="w-7 h-7 opacity-30 group-hover:opacity-50 transition-opacity" strokeWidth={1.5} />
+                                <span className="text-[11px] font-medium tracking-wide">드래그하여 문제를 선택하세요</span>
                             </div>
                         ) : (
                             <Reorder.Group
                                 axis="y"
                                 values={crops}
                                 onReorder={reorderCrops}
-                                className="grid grid-cols-2 gap-3"
+                                className="grid grid-cols-2 gap-2.5"
                             >
                                 {crops.map((crop, index) => (
                                     <Reorder.Item
@@ -311,17 +297,17 @@ export default function Sidebar() {
                                         value={crop}
                                         layout
                                         className="relative"
-                                        whileDrag={{ scale: 1.05, zIndex: 100 }}
+                                        whileDrag={{ scale: 1.04, zIndex: 100 }}
                                     >
                                         <div
-                                            className={`relative bg-gray-900 border rounded-xl p-2.5 shadow-sm transition-all cursor-pointer group select-none ${selectedCropId === crop.id
-                                                ? 'ring-2 ring-blue-500/50 border-blue-500 shadow-blue-500/20 bg-gray-800'
-                                                : 'border-white/5 hover:border-white/20 hover:bg-gray-800 hover:shadow-md'
-                                                }`}
+                                            className={`relative rounded-xl p-2 transition-all cursor-pointer group select-none border ${
+                                                selectedCropId === crop.id
+                                                    ? 'bg-amber-400/[0.06] border-amber-400/40 shadow-[0_0_0_1px_rgba(251,191,36,0.2),0_4px_24px_-8px_rgba(251,191,36,0.4)]'
+                                                    : 'bg-zinc-900/60 border-white/[0.05] hover:border-white/15 hover:bg-zinc-900'
+                                            }`}
                                             onClick={() => {
                                                 setSelectedCropId(crop.id);
-                                                handleQuickCopy(crop); // Auto copy on click
-                                                // Scroll to page
+                                                handleQuickCopy(crop);
                                                 const element = document.getElementById(`page-${crop.pageNum}`);
                                                 if (element) {
                                                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -333,33 +319,40 @@ export default function Sidebar() {
                                             }}
                                         >
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors ${copiedId === crop.id
-                                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                                    : 'bg-white/5 text-slate-400 border border-white/5'
-                                                    }`}>
+                                                <span className={`numeral text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors ${
+                                                    copiedId === crop.id
+                                                        ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/25'
+                                                        : 'bg-white/[0.04] text-zinc-400 border border-white/[0.05]'
+                                                }`}>
                                                     {copiedId === crop.id ? (
-                                                        <span className="flex items-center gap-1"><Check className="w-2.5 h-2.5" /> 복사됨</span>
+                                                        <>
+                                                            <Check className="w-2.5 h-2.5" strokeWidth={2.5} />
+                                                            <span>복사됨</span>
+                                                        </>
                                                     ) : (
                                                         <>
-                                                            <GripVertical className="w-2.5 h-2.5 opacity-50 cursor-grab active:cursor-grabbing" />
-                                                            #{index + 1} (P.{crop.pageNum})
+                                                            <GripVertical className="w-2.5 h-2.5 opacity-50 cursor-grab active:cursor-grabbing" strokeWidth={2} />
+                                                            <span>#{index + 1}</span>
+                                                            <span className="opacity-50">P.{crop.pageNum}</span>
                                                         </>
                                                     )}
                                                 </span>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); removeCrop(crop.id); }}
-                                                    className="text-slate-600 hover:text-red-400 hover:bg-red-500/10 p-1 rounded transition-colors"
+                                                    className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 hover:bg-red-500/[0.08] p-1 rounded transition-all"
                                                 >
-                                                    <Trash2 className="w-3 h-3" />
+                                                    <Trash2 className="w-3 h-3" strokeWidth={2} />
                                                 </button>
                                             </div>
-                                            <div className="h-24 bg-black/20 rounded-lg flex items-center justify-center text-[10px] text-slate-600 overflow-hidden border border-white/5 relative">
-                                                <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:8px_8px] opacity-50"></div>
+                                            <div className="h-24 bg-black/40 rounded-lg flex items-center justify-center text-[10px] text-zinc-700 overflow-hidden border border-white/[0.04] relative dot-pattern">
                                                 {crop.imageUrl ? (
-                                                    <img src={crop.imageUrl} alt="Crop preview" loading="lazy" className="h-full object-contain relative z-10 pointer-events-none" />
-                                                ) : (
-                                                    "No Preview"
-                                                )}
+                                                    <img
+                                                        src={crop.imageUrl}
+                                                        alt="Crop preview"
+                                                        loading="lazy"
+                                                        className="h-full object-contain relative z-10 pointer-events-none"
+                                                    />
+                                                ) : "No Preview"}
                                             </div>
                                         </div>
                                     </Reorder.Item>
@@ -371,138 +364,155 @@ export default function Sidebar() {
                     {/* Preview Modal */}
                     <AnimatePresence>
                         {showPreviewModal && selectedCrop && (
-                            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-10" onClick={() => setShowPreviewModal(false)}>
+                            <div
+                                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-10"
+                                onClick={() => setShowPreviewModal(false)}
+                            >
                                 <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    initial={{ opacity: 0, scale: 0.96 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    className="relative max-w-full max-h-full bg-slate-900 border border-white/10 rounded-2xl p-2 shadow-2xl flex flex-col"
+                                    exit={{ opacity: 0, scale: 0.96 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                                    className="relative max-w-full max-h-full glass-strong rounded-2xl p-2 flex flex-col"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <div className="flex justify-between items-center p-2 border-b border-white/5 mb-2">
-                                        <h3 className="text-white font-bold text-lg px-2">문제 상세 보기</h3>
-                                        <button onClick={() => setShowPreviewModal(false)} className="text-slate-400 hover:text-white p-1 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
-                                            <X className="w-6 h-6" />
+                                    <div className="flex justify-between items-center px-3 py-2.5 border-b border-white/[0.05]">
+                                        <div className="flex items-center gap-3">
+                                            <span className="section-num">PREVIEW</span>
+                                            <h3 className="text-zinc-100 font-semibold text-[15px] tracking-tight">문제 상세 보기</h3>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowPreviewModal(false)}
+                                            className="press text-zinc-400 hover:text-zinc-100 p-1.5 rounded-md hover:bg-white/[0.06] transition-colors"
+                                        >
+                                            <X className="w-5 h-5" strokeWidth={2} />
                                         </button>
                                     </div>
-                                    <div className="flex-1 overflow-auto min-h-0 custom-scrollbar p-4 flex items-center justify-center bg-black/20 rounded-xl">
-                                        <img src={selectedCrop.imageUrl} className="max-w-full max-h-[80vh] object-contain shadow-lg" />
+                                    <div className="flex-1 overflow-auto min-h-0 custom-scrollbar p-4 flex items-center justify-center">
+                                        <img src={selectedCrop.imageUrl} className="max-w-full max-h-[80vh] object-contain shadow-2xl" />
                                     </div>
                                 </motion.div>
                             </div>
                         )}
                     </AnimatePresence>
 
-                    {/* 5. Merge Panel */}
-                    <div className="p-4 bg-white/5 border-t border-white/5 z-50 shadow-[0_-4px_30px_-4px_rgba(0,0,0,0.5)] shrink-0 backdrop-blur-xl">
-                        <div className="text-xs font-bold text-slate-300 mb-3 flex items-center gap-2">
-                            <Layers className="w-4 h-4 text-emerald-400" />
-                            <span>전체 이미지 병합</span>
+                    {/* §04 — Merge Panel */}
+                    <div className="p-4 shrink-0 border-t border-white/[0.05] bg-[rgba(8,8,11,0.6)] backdrop-blur-xl">
+                        <div className="flex items-center gap-3 mb-3.5">
+                            <span className="section-num">04</span>
+                            <Layers className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
+                            <span className="text-[12px] font-semibold text-zinc-200">전체 이미지 병합</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                            <div className="space-y-1.5">
-                                <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wide">가로길이(PX)</label>
+                        <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+                            <Field label="가로 (px)" small>
                                 <input
                                     type="number"
                                     value={mergeWidth}
                                     onChange={(e) => updateSettings({ mergeWidth: Number(e.target.value) })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-center text-slate-200 focus:border-blue-500/50 focus:bg-blue-500/5 outline-none transition-all"
+                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors hover:border-white/10"
                                 />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wide">프로세서(PX)</label>
+                            </Field>
+                            <Field label="간격 (px)" small>
                                 <input
                                     type="number"
                                     value={mergeGap}
                                     onChange={(e) => updateSettings({ mergeGap: Number(e.target.value) })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-center text-slate-200 focus:border-blue-500/50 focus:bg-blue-500/5 outline-none transition-all"
+                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors hover:border-white/10"
                                 />
-                            </div>
+                            </Field>
                         </div>
-
 
                         <div className="flex gap-2">
                             <button
                                 onClick={handleMergeAndCopy}
                                 disabled={isMerging || crops.length === 0}
-                                className={`flex-1 border border-transparent py-2.5 rounded-lg font-bold shadow-md text-xs flex justify-center items-center gap-2 transition-all
-                            ${mergeStatus === 'success'
-                                        ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/20'
-                                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed'
+                                className={`press flex-1 py-2.5 rounded-lg font-semibold text-[12.5px] flex justify-center items-center gap-2 transition-all border
+                                    ${mergeStatus === 'success'
+                                        ? 'bg-emerald-400/[0.12] border-emerald-400/30 text-emerald-200'
+                                        : 'bg-amber-400 hover:bg-amber-300 border-transparent text-zinc-950 shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_24px_-8px_rgba(251,191,36,0.5)] disabled:bg-white/[0.04] disabled:text-zinc-600 disabled:shadow-none disabled:cursor-not-allowed'
                                     }`}
                             >
                                 {isMerging ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        <span>병합 중...</span>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2.25} />
+                                        <span>병합 중</span>
                                     </>
                                 ) : mergeStatus === 'success' ? (
                                     <>
-                                        <Check className="w-4 h-4" />
-                                        <span>복사 완료!</span>
+                                        <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                        <span>복사 완료</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Layers className="w-4 h-4" />
+                                        <Layers className="w-3.5 h-3.5" strokeWidth={2.25} />
                                         <span>병합 복사</span>
                                     </>
                                 )}
                             </button>
 
-                            {/* 순차 복사 버튼 */}
                             {!isSequentialMode ? (
                                 <button
                                     onClick={handleStartSequentialCopy}
                                     disabled={crops.length === 0}
-                                    className="flex-1 border border-emerald-500/30 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 py-2.5 rounded-lg font-bold text-xs flex justify-center items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="press flex-1 py-2.5 rounded-lg text-[12.5px] font-semibold flex justify-center items-center gap-2 border border-white/[0.08] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.06] hover:text-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
-                                    <Scissors className="w-4 h-4" />
+                                    <Scissors className="w-3.5 h-3.5" strokeWidth={2} />
                                     <span>개별 복사</span>
                                 </button>
                             ) : (
                                 <div className="flex-1 flex gap-1">
                                     <button
                                         onClick={handleNextCopy}
-                                        className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white py-2.5 rounded-lg font-bold text-xs flex justify-center items-center gap-1 transition-all"
+                                        className="press flex-1 bg-emerald-400 hover:bg-emerald-300 text-zinc-950 py-2.5 rounded-lg font-semibold text-[12.5px] flex justify-center items-center gap-1.5 transition-colors"
                                     >
-                                        <span>{sequentialIndex + 1}/{crops.length}</span>
-                                        <ChevronRight className="w-4 h-4" />
+                                        <span className="numeral">{sequentialIndex + 1}/{crops.length}</span>
+                                        <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
                                     </button>
                                     <button
                                         onClick={handleStopSequentialCopy}
-                                        className="bg-red-500/20 hover:bg-red-500/40 text-red-400 px-2 rounded-lg transition-all"
+                                        className="press bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 text-red-300 px-2.5 rounded-lg transition-colors"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-3.5 h-3.5" strokeWidth={2} />
                                     </button>
                                 </div>
                             )}
                         </div>
                     </div>
 
-
-                    {/* Manage Mode Overlay - Moved to Portal for Full Screen */}
+                    {/* Manage Mode Overlay */}
                     {isManageMode && createPortal(
-                        <div className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-md p-8 flex flex-col font-sans">
+                        <div className="fixed inset-0 z-[9999] bg-[#07070a]/95 backdrop-blur-2xl p-8 flex flex-col grain">
                             <div className="flex justify-between items-center mb-6 shrink-0 max-w-7xl mx-auto w-full">
                                 <div className="flex items-center gap-6">
-                                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                                        <Maximize2 className="w-6 h-6 text-blue-500" />
-                                        <span>문제 전체확대</span>
-                                        <span className="bg-blue-500/20 text-blue-400 text-sm px-2 py-0.5 rounded-full border border-blue-500/20">Total: {crops.length}</span>
-                                    </h2>
+                                    <div className="flex items-center gap-3">
+                                        <span className="section-num">FULLSCREEN</span>
+                                        <h2 className="text-[20px] font-semibold text-zinc-50 tracking-tight">
+                                            문제 전체확대
+                                        </h2>
+                                        <span className="numeral text-[12px] px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
+                                            Total {crops.length}
+                                        </span>
+                                    </div>
 
-                                    {/* View Mode Toggle */}
-                                    <div className="bg-white/10 p-1 rounded-lg flex items-center gap-1">
+                                    <div className="glass p-1 rounded-lg flex items-center gap-1">
                                         <button
                                             onClick={() => setViewMode('list')}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                                            className={`press px-3 py-1.5 rounded-md text-[11.5px] font-medium transition-colors ${
+                                                viewMode === 'list'
+                                                    ? 'bg-amber-400 text-zinc-950'
+                                                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                                            }`}
                                         >
                                             리스트형 (순서변경)
                                         </button>
                                         <button
                                             onClick={() => setViewMode('grid')}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'grid' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                                            className={`press px-3 py-1.5 rounded-md text-[11.5px] font-medium transition-colors ${
+                                                viewMode === 'grid'
+                                                    ? 'bg-amber-400 text-zinc-950'
+                                                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                                            }`}
                                         >
                                             바둑판형 (한눈에 보기)
                                         </button>
@@ -512,27 +522,26 @@ export default function Sidebar() {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={handleSortCrops}
-                                        className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/20"
+                                        className="press text-[12px] font-medium px-3 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 hover:text-zinc-50 transition-colors"
                                     >
-                                        <span>번호순 정렬</span>
+                                        번호순 정렬
                                     </button>
                                     <button
                                         onClick={() => setIsManageMode(false)}
-                                        className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors"
+                                        className="press w-9 h-9 rounded-lg glass hover:bg-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-zinc-50 transition-colors"
                                     >
-                                        <X className="w-6 h-6" />
+                                        <X className="w-4 h-4" strokeWidth={2} />
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar bg-black/20 rounded-2xl border border-white/5 p-6 shadow-inner max-w-7xl mx-auto w-full">
+                            <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar glass rounded-2xl p-6 max-w-7xl mx-auto w-full">
                                 {viewMode === 'list' ? (
-                                    /* 1. List Mode: Reorder Enabled, Single Column strictly */
                                     <Reorder.Group
                                         axis="y"
                                         values={crops}
                                         onReorder={reorderCrops}
-                                        className="flex flex-col gap-4 max-w-4xl mx-auto w-full"
+                                        className="flex flex-col gap-3 max-w-4xl mx-auto w-full"
                                     >
                                         {crops.map((crop, index) => (
                                             <Reorder.Item
@@ -543,50 +552,54 @@ export default function Sidebar() {
                                                 whileDrag={{ scale: 1.02, zIndex: 100 }}
                                             >
                                                 <div
-                                                    className={`bg-slate-900 border rounded-xl p-4 shadow-lg transition-all group flex gap-6 items-center
-                                                        ${copiedId === crop.id ? 'border-green-500 shadow-green-500/20' : 'border-white/10 hover:border-blue-500/50'}
-                                                    `}
+                                                    className={`bg-zinc-900/60 border rounded-xl p-4 transition-all group flex gap-6 items-center ${
+                                                        copiedId === crop.id
+                                                            ? 'border-emerald-400/40 bg-emerald-400/[0.04]'
+                                                            : 'border-white/[0.06] hover:border-amber-400/30'
+                                                    }`}
                                                     onClick={() => handleQuickCopy(crop)}
                                                 >
-                                                    {/* Left: Info & Controls */}
-                                                    <div className="flex flex-col gap-3 shrink-0 w-32">
-                                                        <span className={`text-xs font-bold px-2 py-1.5 rounded border transition-colors flex items-center justify-center gap-2 ${copiedId === crop.id ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-white/5 text-slate-400 border-white/5'}`}>
+                                                    <div className="flex flex-col gap-2.5 shrink-0 w-32">
+                                                        <span className={`numeral text-[12px] font-medium px-2 py-1.5 rounded-md border transition-colors flex items-center justify-center gap-1.5 ${
+                                                            copiedId === crop.id
+                                                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                                                                : 'bg-white/[0.04] text-zinc-300 border-white/[0.06]'
+                                                        }`}>
                                                             {copiedId === crop.id ? (
                                                                 <>
-                                                                    <Check className="w-3.5 h-3.5" />
-                                                                    <span>복사됨!</span>
+                                                                    <Check className="w-3 h-3" strokeWidth={2.5} />
+                                                                    <span>복사됨</span>
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <GripVertical className="w-4 h-4 opacity-50" />
-                                                                    <span className="text-sm">#{index + 1}</span>
+                                                                    <GripVertical className="w-3 h-3 opacity-50" strokeWidth={2} />
+                                                                    <span>#{index + 1}</span>
                                                                 </>
                                                             )}
                                                         </span>
-                                                        <div className="text-[10px] text-slate-500 text-center font-mono">
+                                                        <div className="numeral text-[10px] text-zinc-600 text-center">
                                                             Page {crop.pageNum}
                                                         </div>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); removeCrop(crop.id); }}
-                                                            className="text-slate-500 hover:text-red-400 bg-white/5 hover:bg-red-500/10 py-2 rounded transition-colors flex justify-center"
+                                                            className="press text-zinc-500 hover:text-red-400 bg-white/[0.03] hover:bg-red-500/[0.08] py-1.5 rounded-md transition-colors flex justify-center"
                                                             title="삭제"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
                                                         </button>
                                                     </div>
 
-                                                    {/* Right: Image Preview */}
-                                                    <div className="flex-1 bg-black/40 rounded-lg flex items-center justify-center relative overflow-hidden border border-white/5 h-32"
+                                                    <div
+                                                        className="flex-1 bg-black/40 rounded-lg flex items-center justify-center relative overflow-hidden border border-white/[0.04] dot-pattern h-32"
                                                         onDoubleClick={() => {
                                                             setSelectedCropId(crop.id);
                                                             setShowPreviewModal(true);
                                                         }}
                                                     >
-                                                        <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:8px_8px] opacity-50"></div>
                                                         {crop.imageUrl ? (
                                                             <img src={crop.imageUrl} alt="Crop preview" className="h-full object-contain p-2 pointer-events-none" />
                                                         ) : (
-                                                            "No Preview"
+                                                            <span className="text-[10px] text-zinc-700">No Preview</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -594,56 +607,131 @@ export default function Sidebar() {
                                         ))}
                                     </Reorder.Group>
                                 ) : (
-                                    /* 2. Grid Mode: Static (No Reorder), Multi Column */
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                                         {crops.map((crop, index) => (
                                             <div
                                                 key={crop.id}
-                                                className={`bg-slate-900 border rounded-xl p-3 shadow-lg transition-all group h-full flex flex-col cursor-pointer 
-                                                        ${copiedId === crop.id ? 'border-green-500 shadow-green-500/20 scale-[1.02]' : 'border-white/10 hover:border-blue-500/50'}
-                                                    `}
+                                                className={`bg-zinc-900/60 border rounded-xl p-3 transition-all group h-full flex flex-col cursor-pointer ${
+                                                    copiedId === crop.id
+                                                        ? 'border-emerald-400/40 scale-[1.02] bg-emerald-400/[0.04]'
+                                                        : 'border-white/[0.06] hover:border-amber-400/30'
+                                                }`}
                                                 onClick={() => handleQuickCopy(crop)}
                                             >
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <span className={`text-xs font-bold px-2 py-1 rounded border transition-colors flex items-center gap-1 ${copiedId === crop.id ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-white/5 text-slate-400 border-white/5'}`}>
+                                                <div className="flex justify-between items-center mb-2.5">
+                                                    <span className={`numeral text-[11px] font-medium px-2 py-0.5 rounded border transition-colors flex items-center gap-1 ${
+                                                        copiedId === crop.id
+                                                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                                                            : 'bg-white/[0.04] text-zinc-400 border-white/[0.06]'
+                                                    }`}>
                                                         {copiedId === crop.id ? (
                                                             <>
-                                                                <Check className="w-3 h-3" />
-                                                                <span>복사됨!</span>
+                                                                <Check className="w-2.5 h-2.5" strokeWidth={2.5} />
+                                                                <span>복사됨</span>
                                                             </>
                                                         ) : (
-                                                            <span>#{index + 1} (P.{crop.pageNum})</span>
+                                                            <span>#{index + 1} <span className="opacity-50">P.{crop.pageNum}</span></span>
                                                         )}
                                                     </span>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); removeCrop(crop.id); }}
-                                                        className="text-slate-600 hover:text-red-400 bg-white/5 hover:bg-red-500/10 p-1.5 rounded transition-colors"
+                                                        className="press opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 bg-white/[0.04] hover:bg-red-500/[0.08] p-1 rounded transition-all"
                                                     >
-                                                        <Trash2 className="w-4 h-4" />
+                                                        <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
                                                     </button>
                                                 </div>
-                                                <div className="aspect-square bg-black/40 rounded-lg flex items-center justify-center relative overflow-hidden border border-white/5">
-                                                    <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:8px_8px] opacity-50"></div>
+                                                <div className="aspect-square bg-black/40 rounded-lg flex items-center justify-center relative overflow-hidden border border-white/[0.04] dot-pattern">
                                                     {crop.imageUrl ? (
                                                         <img src={crop.imageUrl} alt="Crop preview" className="w-full h-full object-contain p-2 pointer-events-none" />
                                                     ) : (
-                                                        "No Preview"
+                                                        <span className="text-[10px] text-zinc-700">No Preview</span>
                                                     )}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
-
                             </div>
                         </div>
                         , document.body)}
                 </>
             ) : (
-                <div className="h-full flex flex-col items-center pt-8 gap-4 opacity-50">
-                    <div className="w-1 h-full bg-white/5 rounded-full"></div>
+                <div className="h-full flex flex-col items-center pt-6 gap-4 opacity-40">
+                    <span className="section-num [writing-mode:vertical-rl] rotate-180 tracking-[0.2em]">
+                        SIDEBAR
+                    </span>
                 </div>
             )}
-        </aside >
+        </aside>
+    );
+}
+
+/* — — — Local subcomponents — — — */
+
+function Section({ num, title, hint, Icon, children }) {
+    return (
+        <div className="px-5 pt-4 pb-4 border-b border-white/[0.05] shrink-0">
+            <div className="flex items-center gap-3 mb-3.5">
+                <span className="section-num">{num}</span>
+                {Icon && <Icon className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />}
+                <span className="text-[12.5px] font-semibold text-zinc-200 tracking-tight">{title}</span>
+                {hint && (
+                    <span className="ml-auto numeral text-[10px] text-zinc-500 px-1.5 py-px rounded bg-white/[0.04] border border-white/[0.06]">
+                        {hint}
+                    </span>
+                )}
+            </div>
+            {children}
+        </div>
+    );
+}
+
+function Field({ label, trailing, children, small }) {
+    return (
+        <div className="space-y-1.5">
+            <div className="flex justify-between items-center min-h-[14px]">
+                <label className={`eyebrow ${small ? 'text-[9px]' : ''}`}>{label}</label>
+                {trailing}
+            </div>
+            {children}
+        </div>
+    );
+}
+
+function Toggle({ on }) {
+    return (
+        <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-out shrink-0 ${
+            on ? 'bg-amber-400' : 'bg-white/[0.08] border border-white/[0.06]'
+        }`}>
+            <motion.span
+                animate={{ x: on ? 16 : 2 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                className={`absolute top-[2px] w-4 h-4 rounded-full ${
+                    on ? 'bg-zinc-950' : 'bg-zinc-300'
+                }`}
+            />
+        </div>
+    );
+}
+
+function Slider({ label, value, min, max, step = 1, onChange, format }) {
+    return (
+        <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+                <span className="text-[11.5px] text-zinc-400 font-medium">{label}</span>
+                <span className="numeral text-[12px] font-semibold text-amber-300 tabular-nums">
+                    {format ? format(value) : value}
+                </span>
+            </div>
+            <input
+                type="range"
+                min={min}
+                max={max}
+                step={step}
+                value={value}
+                onChange={(e) => onChange(Number(e.target.value))}
+                className="w-full"
+            />
+        </div>
     );
 }
