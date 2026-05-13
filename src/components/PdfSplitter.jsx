@@ -1,22 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import { PDFDocument } from 'pdf-lib';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileUp, Download, Trash2, CheckSquare, Square, Scissors, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+// Use fixed public path to avoid MIME/CSP issues on Safari/macOS
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const THUMB_SCALE = 0.3;
 
+// Safari/macOS canvas memory detection
+const isSafariSplitter = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
 // --- Thumbnail Component ---
 function PageThumb({ pdfDoc, pageNum, isSelected, isInRange, onClick }) {
-  const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [rendered, setRendered] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [thumbSrc, setThumbSrc] = useState(null); // store as image instead of keeping canvas alive
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -36,14 +39,25 @@ function PageThumb({ pdfDoc, pageNum, isSelected, isInRange, onClick }) {
     const render = async () => {
       try {
         page = await pdfDoc.getPage(pageNum);
-        const vp = page.getViewport({ scale: THUMB_SCALE * 4 });
-        const canvas = canvasRef.current;
-        if (!canvas || cancelled) return;
+        // Lower scale on Safari to reduce per-thumb memory
+        const scale = isSafariSplitter ? THUMB_SCALE * 2 : THUMB_SCALE * 4;
+        const vp = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
         canvas.width = vp.width;
         canvas.height = vp.height;
         task = page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
         await task.promise;
-        if (!cancelled) setRendered(true);
+        if (!cancelled) {
+          // Convert to image data URL immediately, then release canvas memory
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          canvas.width = 0;
+          canvas.height = 0;
+          setThumbSrc(dataUrl);
+          setRendered(true);
+        } else {
+          canvas.width = 0;
+          canvas.height = 0;
+        }
       } catch (e) {
         if (e.name !== 'RenderingCancelledException') console.error(e);
       }
@@ -75,10 +89,14 @@ function PageThumb({ pdfDoc, pageNum, isSelected, isInRange, onClick }) {
             <Loader2 className="w-5 h-5 text-white/30 animate-spin" />
           </div>
         )}
-        <canvas
-          ref={canvasRef}
-          className={`block w-full h-auto ${rendered ? '' : 'opacity-0'}`}
-        />
+        {thumbSrc ? (
+          <img
+            src={thumbSrc}
+            alt={`Page ${pageNum}`}
+            className="block w-full h-auto"
+            draggable={false}
+          />
+        ) : null}
         {/* Selected overlay */}
         {isSelected && (
           <div className="absolute inset-0 bg-amber-400/15 flex items-center justify-center">
@@ -130,7 +148,13 @@ export default function PdfSplitter() {
     setSelectedPages(new Set());
     setLastClicked(null);
     try {
-      const doc = await pdfjsLib.getDocument(url).promise;
+      const doc = await pdfjsLib.getDocument({
+        url: url,
+        cMapUrl: '/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: '/standard_fonts/',
+        useSystemFonts: false,
+      }).promise;
       setPdfDoc(doc);
       setPageCount(doc.numPages);
     } catch (e) {

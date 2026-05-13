@@ -7,10 +7,14 @@ import { ImageGenerator } from '../services/ImageGenerator';
 import { RotateCw, Scan, Wand2 } from 'lucide-react';
 import React from 'react'; // Added React import for React.memo
 
-// Configure worker locally - we will need to copy the worker file to public or import it properly
-// For Vite, a common pattern is:
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+// Use fixed public path to avoid MIME/CSP issues on Safari/macOS
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+
+// Safari/macOS has stricter canvas memory limits (~256-450MB)
+// Fix: reduce rootMargin so only 3-4 pages render simultaneously (safe even at 3.0x)
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+const SAFARI_ROOT_MARGIN = '300px 0px';
+const DEFAULT_ROOT_MARGIN = '800px 0px';
 
 const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotation = 0, onGlobalCrop, renderScale }) {
     const containerRef = useRef(null);
@@ -29,7 +33,7 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
                     setShouldMount(true);
                 }
             },
-            { rootMargin: '800px 0px' } // Load even earlier to prevent empty boxes
+            { rootMargin: isSafari ? SAFARI_ROOT_MARGIN : DEFAULT_ROOT_MARGIN }
         );
 
         if (containerRef.current) {
@@ -115,9 +119,9 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
                 const canvas = canvasRef.current;
                 if (!canvas) return;
 
-                const context = canvas.getContext('2d');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
+                const context = canvas.getContext('2d', { willReadFrequently: true });
 
                 const renderContext = {
                     canvasContext: context,
@@ -237,7 +241,13 @@ export default function PdfViewer({ file, zoomScale }) {
             try {
                 // Use Object URL instead of ArrayBuffer to prevent heavy memory usage for large files
                 objectUrl = URL.createObjectURL(file);
-                const doc = await pdfjsLib.getDocument(objectUrl).promise;
+                const doc = await pdfjsLib.getDocument({
+                    url: objectUrl,
+                    cMapUrl: '/cmaps/',
+                    cMapPacked: true,
+                    standardFontDataUrl: '/standard_fonts/',
+                    useSystemFonts: false,
+                }).promise;
                 setPdfDoc(doc);
 
                 // Prepare page numbers

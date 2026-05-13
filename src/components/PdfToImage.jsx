@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, Image, Download, Archive, Trash2, Loader2, AlertCircle } from 'lucide-react';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+// Use fixed public path to avoid MIME/CSP issues on Safari/macOS
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const SCALE_OPTIONS = [
   { value: 1.0, label: '표준 (1.0x)', sub: '가장 빠름' },
@@ -48,34 +48,54 @@ export default function PdfToImage() {
     if (!file) return;
     setStatus('processing'); setError(''); setProgress(0); setResults([]);
 
+    let objectUrl = null;
     try {
-      const ab = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(ab) }).promise;
+      // Use Object URL to avoid loading entire file into JS heap
+      objectUrl = URL.createObjectURL(file);
+      const pdf = await pdfjsLib.getDocument({
+        url: objectUrl,
+        cMapUrl: '/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: '/standard_fonts/',
+        useSystemFonts: false,
+      }).promise;
       const total = pdf.numPages;
-      const imgs = [];
       const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
       const quality = format === 'jpeg' ? 0.9 : undefined;
 
+      // Process pages one at a time — never hold more than 1 canvas in memory
+      const imgs = [];
       for (let i = 1; i <= total; i++) {
         const page = await pdf.getPage(i);
         const vp = page.getViewport({ scale });
         const canvas = document.createElement('canvas');
-        canvas.width = vp.width; canvas.height = vp.height;
-        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+        canvas.width = vp.width;
+        canvas.height = vp.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
         const dataUrl = canvas.toDataURL(mimeType, quality);
+
         imgs.push({ page: i, dataUrl, width: canvas.width, height: canvas.height });
-        // free memory
-        canvas.width = 0; canvas.height = 0;
+
+        // Immediately free GPU + CPU memory before next page
+        canvas.width = 0;
+        canvas.height = 0;
         page.cleanup();
+
         setProgress(Math.round((i / total) * 100));
+        // Yield to browser event loop every 5 pages to stay responsive
+        if (i % 5 === 0) await new Promise(r => setTimeout(r, 0));
       }
 
+      await pdf.destroy();
       setResults(imgs);
       setStatus('done');
     } catch (e) {
       console.error(e);
       setError('PDF 변환 중 오류가 발생했습니다. 암호가 걸려있거나 손상된 파일일 수 있습니다.');
       setStatus('error');
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     }
   }, [file, format, scale]);
 

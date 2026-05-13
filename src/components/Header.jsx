@@ -19,6 +19,7 @@ export default function Header({
     isLoading = false,
     activeTab = 'maker',
     onTabChange,
+    hasPdfFile = false,
 }) {
     return (
         <header className="fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between pl-5 pr-4 glass-strong">
@@ -72,8 +73,9 @@ export default function Header({
                 </nav>
             </div>
 
-            {/* Right controls — only on maker tab */}
-            {activeTab === 'maker' && (
+            {/* Right controls — only on maker tab AND only after a PDF is loaded
+                (otherwise the empty-state card already shows the open button) */}
+            {activeTab === 'maker' && hasPdfFile && (
                 <div className="flex items-center gap-2.5">
                     {/* Zoom cluster */}
                     <div className="flex items-center h-9 rounded-lg glass overflow-hidden">

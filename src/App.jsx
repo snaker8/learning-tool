@@ -5,19 +5,31 @@ import PdfViewer from './components/PdfViewer'
 import AnswerExtractor from './components/AnswerExtractor'
 import PdfSplitter from './components/PdfSplitter'
 import Converter from './components/Converter'
-import { CropProvider } from './context/CropContext'
+import { CropProvider, useCropContext } from './context/CropContext'
 import { FileText, Upload } from 'lucide-react'
 
 function App() {
+  return (
+    <CropProvider>
+      <AppShell />
+    </CropProvider>
+  )
+}
+
+function AppShell() {
+  const { clearCrops } = useCropContext();
   const [zoomScale, setZoomScale] = useState(1.5);
   const [pdfFile, setPdfFile] = useState(null);
   const [activeTab, setActiveTab] = useState('maker');
 
   const handleOpenFile = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setPdfFile(file);
-    }
+    if (!file) return;
+    // 새 PDF를 열면 기존 크롭/선택 자동 초기화
+    if (pdfFile) clearCrops();
+    setPdfFile(file);
+    // input 재선택을 위해 value 비우기 (같은 파일 다시 열 때도 onChange 발생)
+    e.target.value = '';
   };
 
   const handleZoomIn = () => setZoomScale(prev => Math.min(prev + 0.1, 3.0));
@@ -37,48 +49,47 @@ function App() {
   };
 
   return (
-    <CropProvider>
-      <div className="app-canvas grain h-screen w-screen flex flex-col overflow-hidden text-zinc-100">
+    <div className="app-canvas grain h-screen w-screen flex flex-col overflow-hidden text-zinc-100">
 
-        <Header
-          zoomLevel={zoomScale}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onZoomReset={handleZoomReset}
-          onOpenPageModal={handleOpenPageModal}
-          onOpenFile={handleOpenFile}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+      <Header
+        zoomLevel={zoomScale}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onZoomReset={handleZoomReset}
+        onOpenPageModal={handleOpenPageModal}
+        onOpenFile={handleOpenFile}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        hasPdfFile={!!pdfFile}
+      />
 
-        <div className="flex-1 flex overflow-hidden pt-16 relative">
-          {activeTab === 'maker' ? (
-            <>
-              <main className="flex-1 relative overflow-y-auto custom-scrollbar p-10 flex flex-col items-center min-h-0">
-                {pdfFile ? (
-                  <PdfViewer file={pdfFile} zoomScale={zoomScale} />
-                ) : (
-                  <EmptyState onOpenFile={handleOpenFile} />
-                )}
-              </main>
+      <div className="flex-1 flex overflow-hidden pt-16 relative">
+        {activeTab === 'maker' ? (
+          <>
+            <main className="flex-1 relative overflow-y-auto custom-scrollbar p-10 flex flex-col items-center min-h-0">
+              {pdfFile ? (
+                <PdfViewer file={pdfFile} zoomScale={zoomScale} />
+              ) : (
+                <EmptyState onOpenFile={handleOpenFile} />
+              )}
+            </main>
 
-              <Sidebar />
-            </>
-          ) : activeTab === 'extractor' ? (
-            <AnswerExtractor />
-          ) : activeTab === 'splitter' ? (
-            <div className="flex-1 overflow-hidden">
-              <PdfSplitter />
-            </div>
-          ) : (
-            <div className="flex-1 overflow-hidden">
-              <Converter />
-            </div>
-          )}
-        </div>
-
+            <Sidebar />
+          </>
+        ) : activeTab === 'extractor' ? (
+          <AnswerExtractor />
+        ) : activeTab === 'splitter' ? (
+          <div className="flex-1 overflow-hidden">
+            <PdfSplitter />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-hidden">
+            <Converter />
+          </div>
+        )}
       </div>
-    </CropProvider>
+
+    </div>
   )
 }
 
