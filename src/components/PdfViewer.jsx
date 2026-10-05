@@ -2,10 +2,11 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import CropOverlay from './CropOverlay';
 import { useCropContext } from '../context/CropContext';
-import { AutoCropService } from '../services/AutoCropService';
+import { AiCropService } from '../services/AiCropService';
 import { ImageGenerator } from '../services/ImageGenerator';
-import { RotateCw, Scan, Wand2 } from 'lucide-react';
+import { RotateCw, Scan } from 'lucide-react';
 import React from 'react'; // Added React import for React.memo
+import { useToast } from '../context/ToastContext';
 
 // Use fixed public path to avoid MIME/CSP issues on Safari/macOS
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -63,38 +64,6 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
             ...rect,
             imageUrl
         });
-    };
-
-    const runAutoCrop = async () => {
-        if (!canvasEl) return;
-        const baseScale = renderScale;
-        // Scale sensitivity
-        const sensitivityScale = renderScale / 1.5;
-        const adjustedSensitivity = (settings.sensitivity || 30) * sensitivityScale;
-        const regions = AutoCropService.analyze(canvasEl, adjustedSensitivity);
-
-        if (regions.length === 0) {
-            console.log(`Page ${pageNum}: No regions found`);
-            return;
-        }
-
-        for (const rect of regions) {
-            const scaleinv = 1 / baseScale;
-            const viewportRect = {
-                x: rect.x * scaleinv,
-                y: rect.y * scaleinv,
-                width: rect.width * scaleinv,
-                height: rect.height * scaleinv
-            };
-
-            const imageUrl = await ImageGenerator.generateCropImage(canvasEl, viewportRect, baseScale);
-
-            addCrop({
-                pageNum,
-                ...viewportRect,
-                imageUrl
-            });
-        }
     };
 
     useEffect(() => {
@@ -200,13 +169,6 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
             {/* Page Controls Overlay */}
             <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-50">
                 <button
-                    onClick={runAutoCrop}
-                    className="press bg-black/55 hover:bg-amber-400 hover:text-zinc-950 text-white p-1.5 rounded-md backdrop-blur-md border border-white/10 transition-colors"
-                    title="문제 자동 인식"
-                >
-                    <Wand2 className="w-3.5 h-3.5" strokeWidth={1.75} />
-                </button>
-                <button
                     onClick={handleFullPageCrop}
                     className="press bg-black/55 hover:bg-amber-400 hover:text-zinc-950 text-white p-1.5 rounded-md backdrop-blur-md border border-white/10 transition-colors"
                     title="전체 페이지 선택"
@@ -222,6 +184,7 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
 });
 
 export default function PdfViewer({ file, zoomScale }) {
+    const toast = useToast();
     const { settings } = useCropContext();
     const RENDER_SCALE = settings.renderScale || 3.0;
     const [pdfDoc, setPdfDoc] = useState(null);
@@ -236,10 +199,21 @@ export default function PdfViewer({ file, zoomScale }) {
         if (!file) return;
 
         let objectUrl = null;
+        let cancelled = false;
+        let loadedDoc = null;
+
+        // ★ 새 PDF 로드 시작 전에 이전 doc/pages 를 먼저 비워서 PdfPage들을
+        // 언마운트시킨다 (canvas/render 리소스 즉시 해제). 이렇게 안 하면
+        // 이전 PDF의 페이지들이 새 doc 로드 동안 함께 메모리 잔존 → 큰
+        // 파일에선 "응답없음" 으로 팅긴다.
+        setPdfDoc(prev => {
+            if (prev) prev.destroy().catch(() => {});
+            return null;
+        });
+        setPages([]);
 
         const loadPdf = async () => {
             try {
-                // Use Object URL instead of ArrayBuffer to prevent heavy memory usage for large files
                 objectUrl = URL.createObjectURL(file);
                 const doc = await pdfjsLib.getDocument({
                     url: objectUrl,
@@ -248,11 +222,13 @@ export default function PdfViewer({ file, zoomScale }) {
                     standardFontDataUrl: '/standard_fonts/',
                     useSystemFonts: false,
                 }).promise;
+                if (cancelled) {
+                    doc.destroy().catch(() => {});
+                    return;
+                }
+                loadedDoc = doc;
                 setPdfDoc(doc);
-
-                // Prepare page numbers
-                const pageNums = Array.from({ length: doc.numPages }, (_, i) => i + 1);
-                setPages(pageNums);
+                setPages(Array.from({ length: doc.numPages }, (_, i) => i + 1));
             } catch (error) {
                 console.error("Error loading PDF:", error);
             }
@@ -261,90 +237,132 @@ export default function PdfViewer({ file, zoomScale }) {
         loadPdf();
 
         return () => {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
+            cancelled = true;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            if (loadedDoc) loadedDoc.destroy().catch(() => {});
         };
     }, [file]);
 
-    const { addCrop, crops } = useCropContext();
+    const { addCrop, crops, sortCrops } = useCropContext();
     const [isProcessing, setIsProcessing] = useState(false);
 
     const processGlobalCrop = useCallback(async (rect, sourcePageNum) => { // rect is in Unscaled Coord (Viewport / Scale)
         if (!pdfDoc) return;
+
+        const totalPages = pdfDoc.numPages;
+
+        // 비용 폭주 방지 — 많은 페이지에 AI 일괄 적용 시 사용자 확인.
+        // Pro 모델 기준 페이지당 ~₩10 → 100페이지 ≈ ₩1,000.
+        const HARD_LIMIT = 300;
+        const CONFIRM_THRESHOLD = 30;
+        if (totalPages > HARD_LIMIT) {
+            toast.error(`${totalPages}페이지는 한 번에 처리할 수 없습니다 (한도 ${HARD_LIMIT}페이지). PDF 분할기로 나눈 뒤 다시 시도해주세요.`);
+            return;
+        }
+        if (totalPages > CONFIRM_THRESHOLD) {
+            const estCost = totalPages * 10;
+            const ok = await toast.confirm({
+                title: `${totalPages}페이지에 AI 자동 인식을 적용할까요?`,
+                message:
+                    `예상 비용 약 ₩${estCost.toLocaleString()} (페이지당 ~₩10)
+` +
+                    `페이지가 많으면 시간이 걸립니다.`,
+                confirmLabel: '적용',
+            });
+            if (!ok) return;
+        }
+
         setIsProcessing(true);
+        const failedPages = [];
 
         try {
-            const totalPages = pdfDoc.numPages;
             const baseScale = RENDER_SCALE;
 
-            const sensitivityScale = RENDER_SCALE / 1.5;
-            const adjustedSensitivity = (settings.sensitivity || 30) * sensitivityScale;
+            const processPage = async (pageNum) => {
+                const page = await pdfDoc.getPage(pageNum);
+                let canvas = null;
+                try {
+                    const totalRotation = (page.rotate + rotation) % 360;
+                    const viewport = page.getViewport({ scale: baseScale, rotation: totalRotation });
 
-            for (let i = 1; i <= totalPages; i++) {
-                if (i % 5 === 0) {
-                    await new Promise(resolve => setTimeout(resolve, 0));
-                }
+                    canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    const context = canvas.getContext('2d');
+                    await page.render({ canvasContext: context, viewport }).promise;
 
-                const page = await pdfDoc.getPage(i);
-                const totalRotation = (page.rotate + rotation) % 360;
-                const viewport = page.getViewport({ scale: baseScale, rotation: totalRotation });
+                    if (settings.autoCrop) {
+                        const pixelRect = rect;
+                        // AI 검출만 쓴다. 픽셀 분석 폴백은 제거했다 —
+                        // 실측에서 과검출이 심해(한 페이지 4문제를 7~11개로 반환)
+                        // 조용히 틀린 결과를 주는 것보다 실패를 알리는 편이 낫다.
+                        const refinedRects = await AiCropService.detectProblems(canvas, pixelRect);
+                        if (!refinedRects || refinedRects.length === 0) {
+                            failedPages.push(pageNum);
+                            return;
+                        }
 
-                const canvas = document.createElement('canvas');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                const context = canvas.getContext('2d');
-
-                await page.render({ canvasContext: context, viewport }).promise;
-
-                if (settings.autoCrop) {
-                    const pixelRect = rect;
-                    const refinedRects = AutoCropService.analyze(canvas, adjustedSensitivity, pixelRect);
-
-                    for (const r of refinedRects) {
+                        for (const r of refinedRects) {
+                            const unscaledRect = {
+                                x: r.x / baseScale,
+                                y: r.y / baseScale,
+                                width: r.width / baseScale,
+                                height: r.height / baseScale,
+                            };
+                            const imageUrl = await ImageGenerator.generateCropImage(canvas, unscaledRect, baseScale);
+                            // label은 Gemini가 반환한 문제 번호 ("01", "10" 등).
+                            // 자동 정렬 시 사용.
+                            addCrop({ pageNum, ...unscaledRect, imageUrl, label: r.label || '' });
+                        }
+                    } else {
                         const unscaledRect = {
-                            x: r.x / baseScale,
-                            y: r.y / baseScale,
-                            width: r.width / baseScale,
-                            height: r.height / baseScale
+                            x: rect.x / baseScale,
+                            y: rect.y / baseScale,
+                            width: rect.width / baseScale,
+                            height: rect.height / baseScale,
                         };
-
                         const imageUrl = await ImageGenerator.generateCropImage(canvas, unscaledRect, baseScale);
-
-                        addCrop({
-                            pageNum: i,
-                            ...unscaledRect,
-                            imageUrl
-                        });
+                        addCrop({ pageNum, ...unscaledRect, imageUrl });
                     }
-
-                } else {
-                    const unscaledRect = {
-                        x: rect.x / baseScale,
-                        y: rect.y / baseScale,
-                        width: rect.width / baseScale,
-                        height: rect.height / baseScale
-                    };
-
-                    const imageUrl = await ImageGenerator.generateCropImage(canvas, unscaledRect, baseScale);
-
-                    addCrop({
-                        pageNum: i,
-                        ...unscaledRect,
-                        imageUrl
-                    });
+                } finally {
+                    if (canvas) { canvas.width = 0; canvas.height = 0; }
+                    page.cleanup();
                 }
+            };
 
-                canvas.width = 0;
-                canvas.height = 0;
-                page.cleanup();
+            // 페이지 병렬 처리 — concurrency 4 (Cloud Function maxInstances=2,
+            // 각 instance가 다중 요청 처리 가능하지만 과한 fan-out 방지).
+            const CONCURRENCY = 4;
+            let nextIdx = 1;
+            const runner = async () => {
+                while (nextIdx <= totalPages) {
+                    const myPage = nextIdx++;
+                    try { await processPage(myPage); }
+                    catch (e) {
+                        console.error(`page ${myPage} failed`, e);
+                        failedPages.push(myPage);
+                    }
+                }
+            };
+            await Promise.all(
+                Array.from({ length: Math.min(CONCURRENCY, totalPages) }, () => runner())
+            );
+            // 페이지가 병렬로 처리되어 addCrop 순서가 섞일 수 있으므로
+            // 끝나면 page → y 순으로 자동 재정렬한다.
+            sortCrops();
+            if (failedPages.length) {
+                const shown = failedPages.sort((a, b) => a - b).slice(0, 10).join(', ');
+                toast.error(
+                    `${failedPages.length}개 페이지에서 문제를 찾지 못했습니다 (p${shown}${failedPages.length > 10 ? ' 외' : ''}). ` +
+                    `해당 페이지는 직접 드래그해서 잘라주세요.`
+                );
             }
         } catch (e) {
             console.error("Global processing error", e);
         } finally {
             setIsProcessing(false);
         }
-    }, [pdfDoc, rotation, RENDER_SCALE, settings.autoCrop, settings.sensitivity, addCrop]);
+    }, [pdfDoc, rotation, RENDER_SCALE, settings.autoCrop, addCrop, sortCrops, toast]);
 
     return (
         <div className="flex flex-col items-center gap-8 py-2 w-full max-w-[1200px]">

@@ -10,10 +10,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:firebase": "vite build --mode production",
+    "build:electron": "vite build --mode electron",
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "vite build && electron-builder --win",
+    "electron:build": "npm run build:electron && electron-builder --win",
     "dist": "npm run electron:build"
   },
   "build": {

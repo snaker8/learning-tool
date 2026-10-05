@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, Image, Download, Archive, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { useAdoptSharedFile } from '../context/FileContext';
 
 // Use fixed public path to avoid MIME/CSP issues on Safari/macOS
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -37,6 +38,9 @@ export default function PdfToImage() {
     e.preventDefault(); setIsDragOver(false);
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   };
+  // 홈에서 연 파일을 이어받는다
+  useAdoptSharedFile(handleFile, 'pdf');
+
   const handleFileChange = (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); };
 
   const resetAll = () => {
@@ -116,15 +120,6 @@ export default function PdfToImage() {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
       <div className="max-w-6xl mx-auto space-y-6">
-
-        {/* Header */}
-        <div className="flex items-end justify-between">
-          <div>
-            <span className="section-num">04 / 04 — 이미지 변환</span>
-            <h1 className="mt-1.5 text-[22px] font-semibold text-zinc-100 tracking-tight">PDF → 이미지</h1>
-          </div>
-          <span className="eyebrow">JPEG · PNG · ZIP</span>
-        </div>
 
         {/* Error */}
         <AnimatePresence>

@@ -1,0 +1,17 @@
+{
+  "name": "Learning Tool Studio",
+  "short_name": "LT Studio",
+  "description": "교재에서 문제만 잘라 수업 판서로. PDF 분할·이미지 변환·정답표 추출까지.",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0b0e",
+  "theme_color": "#121215",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

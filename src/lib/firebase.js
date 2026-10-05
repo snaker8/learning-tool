@@ -18,22 +18,37 @@ const RECAPTCHA_SITE_KEY = '6Ldx1tMsAAAAADTSxSKFHp2R1FWdNXwT3hLJqa9r';
 
 export const firebaseApp = initializeApp(firebaseConfig);
 
+// App Check 는 **lazy init**: 처음 토큰 요청이 들어올 때만 초기화한다.
+// 이전엔 모듈 로드 시 즉시 init + isTokenAutoRefreshEnabled:true 로 인해
+// reCAPTCHA Enterprise iframe 이 백그라운드에서 계속 돌면서 메인 스레드를
+// 점유 → OS file picker 가 "응답 없음" 으로 freeze 되는 증상이 있었음.
+// 답 추출 / 일괄 AI 인식 을 안 쓰는 사용자에겐 reCAPTCHA 가 아예 안 로드된다.
 let appCheckInstance = null;
 let appCheckInitError = null;
+let initPromise = null;
 
-try {
-    appCheckInstance = initializeAppCheck(firebaseApp, {
-        provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-        isTokenAutoRefreshEnabled: true,
-    });
-    console.info('[AppCheck] initialized');
-} catch (err) {
-    appCheckInitError = err;
-    console.error('[AppCheck] init failed:', err);
+function ensureAppCheck() {
+    if (appCheckInstance || appCheckInitError) return;
+    if (initPromise) return initPromise;
+    initPromise = (async () => {
+        try {
+            appCheckInstance = initializeAppCheck(firebaseApp, {
+                provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+                // 자동 갱신 OFF — 토큰 만료 직전에 또 발급받지 않게.
+                // getToken 호출 시점에만 발급/갱신된다. 메인 스레드 부하 감소.
+                isTokenAutoRefreshEnabled: false,
+            });
+        } catch (err) {
+            appCheckInitError = err;
+            console.error('[AppCheck] init failed:', err);
+        }
+    })();
+    return initPromise;
 }
 
 /** Returns a fresh App Check token, throwing a clear error on failure. */
 export async function getAppCheckToken() {
+    await ensureAppCheck();
     if (!appCheckInstance) {
         throw new Error(
             appCheckInitError

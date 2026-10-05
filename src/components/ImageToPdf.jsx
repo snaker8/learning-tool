@@ -41,7 +41,6 @@ export default function ImageToPdf() {
     return () => {
       items.forEach(it => URL.revokeObjectURL(it.previewUrl));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addFiles = useCallback((newFiles) => {
@@ -155,15 +154,6 @@ export default function ImageToPdf() {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
       <div className="max-w-6xl mx-auto space-y-6">
-
-        {/* Header */}
-        <div className="flex items-end justify-between">
-          <div>
-            <span className="section-num">이미지 → PDF</span>
-            <h1 className="mt-1.5 text-[22px] font-semibold text-zinc-100 tracking-tight">이미지 → PDF</h1>
-          </div>
-          <span className="eyebrow">JPEG · PNG · WebP</span>
-        </div>
 
         {/* Error */}
         <AnimatePresence>

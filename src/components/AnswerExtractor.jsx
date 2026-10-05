@@ -4,8 +4,11 @@ import {
     ArrowRightCircle, Filter, Copy, Check, CheckSquare, Inbox, Loader2, ShieldCheck
 } from 'lucide-react';
 import { getAppCheckToken } from '../lib/firebase';
+import { useAdoptSharedFile } from '../context/FileContext';
+import { useToast } from '../context/ToastContext';
 
 export default function AnswerExtractor() {
+    const toast = useToast();
     const [rawData, setRawData] = useState('');
     const [parsedRows, setParsedRows] = useState([]);
     const [startNumber, setStartNumber] = useState(1);
@@ -23,16 +26,24 @@ export default function AnswerExtractor() {
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
 
+    // 원문자 숫자 ①~⑮ + 원문자 한글 ㉠~㉭ (한국 시험 보기에 자주 등장)
+    const CIRCLED_MAP = {
+        '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
+        '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9', '⑩': '10',
+        '⑪': '11', '⑫': '12', '⑬': '13', '⑭': '14', '⑮': '15',
+        '㉠': 'ㄱ', '㉡': 'ㄴ', '㉢': 'ㄷ', '㉣': 'ㄹ', '㉤': 'ㅁ',
+        '㉥': 'ㅂ', '㉦': 'ㅅ', '㉧': 'ㅇ', '㉨': 'ㅈ', '㉩': 'ㅊ',
+        '㉪': 'ㅋ', '㉫': 'ㅌ', '㉬': 'ㅍ', '㉭': 'ㅎ',
+    };
+
     const hasCircledNumber = (str) => {
-        const circled = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮'];
-        return circled.some(c => str.includes(c));
+        return Object.keys(CIRCLED_MAP).some(c => str.includes(c));
     };
 
     const convertCircledToNumber = (str) => {
-        const map = { '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5', '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9', '⑩': '10', '⑪': '11', '⑫': '12', '⑬': '13', '⑭': '14', '⑮': '15' };
         let parts = str.split(/[,|\s]+/).filter(Boolean);
         return parts.map(part => {
-            for (const [key, val] of Object.entries(map)) {
+            for (const [key, val] of Object.entries(CIRCLED_MAP)) {
                 if (part.includes(key)) return val;
             }
             return part;
@@ -116,7 +127,7 @@ export default function AnswerExtractor() {
             if (!result) throw new Error('execCommand failed');
         } catch (err) {
             console.error('Copy failed', err);
-            alert('복사에 실패했습니다.');
+            toast.error('복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해주세요.');
         } finally {
             document.removeEventListener('copy', handleCopy);
             setTimeout(() => setFn(false), 2000);
@@ -134,7 +145,7 @@ export default function AnswerExtractor() {
     };
 
     const handleCopyRange = () => {
-        if (!rangeInput.trim()) { alert('범위를 입력해주세요 (예: 1, 3-5)'); return; }
+        if (!rangeInput.trim()) { toast.error('범위를 입력해주세요 — 예: 1, 3-5'); return; }
         const targetNumbers = new Set();
         rangeInput.split(',').forEach(part => {
             const trimmed = part.trim();
@@ -147,13 +158,13 @@ export default function AnswerExtractor() {
             }
         });
         const filteredRows = parsedRows.filter(row => targetNumbers.has(row.number));
-        if (filteredRows.length === 0) { alert('해당 범위에 문제가 없습니다.'); return; }
+        if (filteredRows.length === 0) { toast.error('그 범위에는 문제가 없습니다.'); return; }
         const dataMatrix = filteredRows.map(row => [row.type, row.answer]);
         performCopy(dataMatrix, setCopiedRange);
     };
 
     const handleCopySelected = () => {
-        if (selectedRows.size === 0) { alert('복사할 항목을 선택해주세요.'); return; }
+        if (selectedRows.size === 0) { toast.error('복사할 항목을 먼저 선택해주세요.'); return; }
         const selectedData = parsedRows.filter(row => selectedRows.has(row.id));
         const dataMatrix = selectedData.map(row => [row.type, row.answer]);
         performCopy(dataMatrix, setCopiedSelected);
@@ -193,12 +204,15 @@ export default function AnswerExtractor() {
     const processFile = (file) => {
         if (!file) return;
         if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-            alert('이미지 또는 PDF 파일만 업로드 가능합니다.');
+            toast.error('이미지 또는 PDF 파일만 열 수 있습니다.');
             return;
         }
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
     };
+
+    // 홈에서 연 파일을 이어받는다
+    useAdoptSharedFile(processFile, 'pdf-or-image');
 
     const handleFileChange = (e) => processFile(e.target.files[0]);
     const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -220,7 +234,7 @@ export default function AnswerExtractor() {
     };
 
     const callGemini = async () => {
-        if (!selectedFile) { alert("파일을 선택해주세요."); return; }
+        if (!selectedFile) { toast.error('먼저 정답표 파일을 열어주세요.'); return; }
         setIsAnalyzing(true);
         try {
             const imageData = await fileToBase64(selectedFile);
@@ -245,7 +259,7 @@ export default function AnswerExtractor() {
             setRawData(data.text);
             parseData(data.text);
         } catch (error) {
-            alert(`오류: ${error.message}`);
+            toast.error(error.message || 'AI 분석 중 오류가 발생했습니다.');
         } finally {
             setIsAnalyzing(false);
         }

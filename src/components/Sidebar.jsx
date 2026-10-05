@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Scissors, Settings, GripVertical, Trash2, Maximize2, Layers, Loader2, Check, X, ChevronRight, ChevronLeft, FileStack } from 'lucide-react';
+import { Scissors, Settings, GripVertical, Trash2, Maximize2, Layers, Loader2, Check, X, ChevronRight, ChevronLeft, FileStack, Sparkles } from 'lucide-react';
 import { useCropContext } from '../context/CropContext';
 import { MergeService } from '../services/MergeService';
 import { Reorder, AnimatePresence, motion } from 'framer-motion';
+import { useToast } from '../context/ToastContext';
 
 export default function Sidebar() {
+    const toast = useToast();
     const {
         crops, removeCrop, selectedCropId, setSelectedCropId,
-        settings, updateSettings, clearCrops, reorderCrops
+        settings, updateSettings, clearCrops, reorderCrops,
+        copiedCropId, markCopied
     } = useCropContext();
 
     const {
         copyWidth, maxHeight, useMaxHeight,
-        isGlobalMode, autoCrop, sensitivity,
+        isGlobalMode, autoCrop,
         mergeWidth, mergeGap, renderScale
     } = settings;
 
     const [isMerging, setIsMerging] = useState(false);
     const [mergeStatus, setMergeStatus] = useState(null);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
-    const [copiedId, setCopiedId] = useState(null);
+    // Local sidebar uses the context's copiedCropId. Keep a local alias for the
+    // existing JSX to avoid a sweeping rename.
+    const copiedId = copiedCropId;
 
     const [sequentialIndex, setSequentialIndex] = useState(0);
     const [isSequentialMode, setIsSequentialMode] = useState(false);
@@ -38,14 +43,13 @@ export default function Sidebar() {
         try {
             const success = await MergeService.copyToClipboard(crop.imageUrl);
             if (success) {
-                setCopiedId(crop.id);
-                setTimeout(() => setCopiedId(null), 1000);
+                markCopied(crop.id);
             } else {
-                alert("클립보드 복사에 실패했습니다. 브라우저 권한을 확인해주세요.");
+                toast.error('클립보드 복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해주세요.');
             }
         } catch (err) {
             console.error("Quick copy failed:", err);
-            alert("클립보드 복사 중 오류가 발생했습니다.");
+            toast.error('클립보드 복사 중 오류가 발생했습니다.');
         }
     };
 
@@ -59,20 +63,28 @@ export default function Sidebar() {
             const urls = crops.map(c => c.imageUrl).filter(Boolean);
             if (urls.length === 0) return;
 
-            const mergedUrl = await MergeService.mergeImages(urls, mergeWidth, mergeGap);
-            const success = await MergeService.copyToClipboard(mergedUrl);
+            const result = await MergeService.mergeImages(urls, mergeWidth, mergeGap);
+            const success = await MergeService.copyToClipboard(result.dataUrl);
 
             if (success) {
                 setMergeStatus('success');
                 setTimeout(() => setMergeStatus(null), 2000);
+                // 가로폭이 자동 축소됐다면 사용자에게 알림 — 간격이 우선이라는 사실 명시
+                if (result.adjusted && result.finalWidth !== mergeWidth) {
+                    toast.info(
+                        `간격 ${mergeGap}px 를 지키려고 가로폭을 ` +
+                        `${mergeWidth}px → ${result.finalWidth}px 로 줄였습니다. ` +
+                        `더 넓게 쓰려면 간격을 줄이거나 크롭을 나눠 합쳐주세요.`
+                    );
+                }
             } else {
                 setMergeStatus('error');
-                alert("이미지 병합 복사에 실패했습니다. 클립보드 권한을 확인해주세요.");
+                toast.error('이미지 병합 복사에 실패했습니다. 클립보드 권한을 확인해주세요.');
             }
         } catch (error) {
             console.error("Merge and copy failed:", error);
             setMergeStatus('error');
-            alert("이미지 병합 복사 중 오류가 발생했습니다.");
+            toast.error(`이미지 병합 복사 중 오류: ${error?.message || '알 수 없는 오류'}`);
         } finally {
             setIsMerging(false);
         }
@@ -96,15 +108,14 @@ export default function Sidebar() {
             try {
                 const success = await MergeService.copyToClipboard(crop.imageUrl);
                 if (success) {
-                    setCopiedId(crop.id);
-                    setTimeout(() => setCopiedId(null), 500);
+                    markCopied(crop.id);
                 } else {
-                    alert("연속 복사 중 클립보드 접근에 실패했습니다.");
+                    toast.error('연속 복사 중 클립보드 접근에 실패했습니다.');
                     handleStopSequentialCopy();
                 }
             } catch (err) {
                 console.error("Sequential copy failed:", err);
-                alert("연속 복사 중 오류가 발생했습니다.");
+                toast.error('연속 복사 중 오류가 발생했습니다.');
                 handleStopSequentialCopy();
             }
         }
@@ -154,6 +165,7 @@ export default function Sidebar() {
                                     type="number"
                                     value={copyWidth}
                                     onChange={(e) => updateSettings({ copyWidth: Number(e.target.value) })}
+                                    onFocus={(e) => e.target.select()}
                                     className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10"
                                 />
                             </Field>
@@ -173,6 +185,7 @@ export default function Sidebar() {
                                     value={maxHeight}
                                     disabled={!useMaxHeight}
                                     onChange={(e) => updateSettings({ maxHeight: Number(e.target.value) })}
+                                    onFocus={(e) => e.target.select()}
                                     className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-white/[0.06]"
                                 />
                             </Field>
@@ -195,11 +208,11 @@ export default function Sidebar() {
                                     <div className="flex items-center gap-2">
                                         <FileStack className={`w-3.5 h-3.5 ${isGlobalMode ? 'text-amber-300' : 'text-zinc-500'}`} strokeWidth={1.75} />
                                         <span className={`text-[13px] font-semibold ${isGlobalMode ? 'text-amber-200' : 'text-zinc-300'}`}>
-                                            일괄 이미지 모드
+                                            전체 문제 자동 인식
                                         </span>
                                     </div>
                                     <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">
-                                        선택한 범위를 모든 페이지에서 개별 검사
+                                        선택한 범위를 모든 페이지에서 AI로 자동 분할
                                     </p>
                                 </div>
                                 <Toggle on={isGlobalMode} />
@@ -215,17 +228,12 @@ export default function Sidebar() {
                                     className="accent-amber-400 w-4 h-4 rounded cursor-pointer"
                                 />
                                 <span className="text-[13px] font-medium text-zinc-200 group-hover:text-zinc-50 transition-colors">
-                                    문제 자동 인식 & 분할
+                                    AI 문제 인식
                                 </span>
                             </label>
-
-                            <Slider
-                                label="민감도"
-                                value={sensitivity}
-                                min={10}
-                                max={100}
-                                onChange={(v) => updateSettings({ sensitivity: v })}
-                            />
+                            <p className="text-[10px] text-zinc-600 -mt-1 leading-relaxed">
+                                일괄 모드에서만 동작 — 끄면 지정한 영역을 모든 페이지에서 그대로 자릅니다
+                            </p>
 
                             <div className="pt-3 border-t border-white/[0.05]">
                                 <Slider
@@ -264,8 +272,14 @@ export default function Sidebar() {
                                 <span>전체확대</span>
                             </button>
                             <button
-                                onClick={() => {
-                                    if (window.confirm('모든 문제를 삭제하시겠습니까?')) {
+                                onClick={async () => {
+                                    const ok = await toast.confirm({
+                                        title: '잘라둔 문제를 모두 지울까요?',
+                                        message: '되돌릴 수 없습니다.',
+                                        confirmLabel: '모두 지우기',
+                                        danger: true,
+                                    });
+                                    if (ok) {
                                         clearCrops();
                                     }
                                 }}
@@ -410,6 +424,7 @@ export default function Sidebar() {
                                     type="number"
                                     value={mergeWidth}
                                     onChange={(e) => updateSettings({ mergeWidth: Number(e.target.value) })}
+                                    onFocus={(e) => e.target.select()}
                                     className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors hover:border-white/10"
                                 />
                             </Field>
@@ -418,6 +433,7 @@ export default function Sidebar() {
                                     type="number"
                                     value={mergeGap}
                                     onChange={(e) => updateSettings({ mergeGap: Number(e.target.value) })}
+                                    onFocus={(e) => e.target.select()}
                                     className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors hover:border-white/10"
                                 />
                             </Field>

@@ -15,7 +15,8 @@ export default function Converter() {
     return (
         <div className="flex-1 flex flex-col overflow-hidden">
             {/* Mode switcher */}
-            <div className="px-8 pt-6 pb-2 shrink-0">
+            {/* 위에 ToolIntro 안내 띠가 이미 있으므로 상단 여백을 줄인다 */}
+            <div className="px-8 pt-1 pb-2 shrink-0">
                 <div className="inline-flex items-center gap-1 p-1 rounded-xl glass">
                     {MODES.map(({ id, label, label2, From, To }) => {
                         const isActive = mode === id;

@@ -5,6 +5,8 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileUp, Download, Trash2, CheckSquare, Square, Scissors, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { useAdoptSharedFile } from '../context/FileContext';
+import { useToast } from '../context/ToastContext';
 
 // Use fixed public path to avoid MIME/CSP issues on Safari/macOS
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -118,6 +120,7 @@ function PageThumb({ pdfDoc, pageNum, isSelected, isInRange, onClick }) {
 
 // --- Main Component ---
 export default function PdfSplitter() {
+  const toast = useToast();
   const [file, setFile] = useState(null);
   const [pdfDoc, setPdfDoc] = useState(null);       // pdfjs doc (for preview)
   const [pageCount, setPageCount] = useState(0);
@@ -138,7 +141,7 @@ export default function PdfSplitter() {
 
   const loadFile = useCallback(async (f) => {
     if (!f || f.type !== 'application/pdf') {
-      alert('올바른 PDF 파일을 선택해주세요.');
+      toast.error('PDF 파일만 열 수 있습니다.');
       return;
     }
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
@@ -159,10 +162,13 @@ export default function PdfSplitter() {
       setPageCount(doc.numPages);
     } catch (e) {
       console.error(e);
-      alert('PDF를 불러오는데 실패했습니다.');
+      toast.error('PDF를 불러오지 못했습니다. 암호가 걸린 파일이거나 손상된 파일일 수 있습니다.');
       setFile(null);
     }
   }, []);
+
+  // 홈에서 연 파일을 이어받는다 (탭마다 다시 열 필요 없음)
+  useAdoptSharedFile(loadFile, 'pdf');
 
   const handleFileChange = (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); };
   const handleDragOver = (e) => e.preventDefault();
@@ -228,7 +234,7 @@ export default function PdfSplitter() {
       saveAs(blob, `${file.name.replace('.pdf', '')}_split.zip`);
     } catch (e) {
       console.error(e);
-      alert(e.message || '분할 중 오류가 발생했습니다.');
+      toast.error(e.message || '분할 중 오류가 발생했습니다.');
     } finally {
       setIsProcessing(false);
       setProgress(0);

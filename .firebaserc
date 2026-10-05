@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "learning-tool-studio"
+  },
   "targets": {},
   "etags": {}
 }

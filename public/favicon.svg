@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Learning Tool Studio">
+  <rect width="512" height="512" rx="112" fill="#121215"/>
+  <rect x="166" y="136" width="180" height="240" rx="13" fill="#fafafa"/>
+  <rect x="191.2" y="174.4" width="77.8" height="12" rx="6" fill="#c8c8d0"/><rect x="191.2" y="205.6" width="98.5" height="12" rx="6" fill="#c8c8d0"/><rect x="191.2" y="236.8" width="85.5" height="12" rx="6" fill="#c8c8d0"/>
+  <g fill="#fbbf24">
+    <rect x="52" y="52" width="124" height="52" rx="26.0"/><rect x="52" y="52" width="52" height="124" rx="26.0"/>
+    <rect x="336" y="52" width="124" height="52" rx="26.0"/><rect x="408" y="52" width="52" height="124" rx="26.0"/>
+    <rect x="52" y="408" width="124" height="52" rx="26.0"/><rect x="52" y="336" width="52" height="124" rx="26.0"/>
+    <rect x="336" y="408" width="124" height="52" rx="26.0"/><rect x="408" y="336" width="52" height="124" rx="26.0"/>
+  </g>
+</svg>

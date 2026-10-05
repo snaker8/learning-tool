@@ -36,3 +36,9 @@ build_*.txt
 *.sw?
 release/
 
+# pdfjs 런타임 자산 — vite.config.js 의 copy-pdfjs-assets 플러그인이
+# 빌드 때 node_modules/pdfjs-dist 에서 dist/ 로 복사한다. 3.4MB 바이너리를
+# 저장소에 넣을 이유가 없다.
+public/cmaps/
+public/standard_fonts/
+public/pdf.worker.min.mjs

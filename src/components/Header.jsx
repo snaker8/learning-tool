@@ -1,26 +1,29 @@
 import React from 'react';
+import { flushSync } from 'react-dom';
 import { motion } from 'framer-motion';
-import { ZoomIn, ZoomOut, RotateCcw, FileText, FolderOpen, Loader2, Scissors, Sparkles, Split, ArrowLeftRight } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, FileText, FolderOpen, Loader2, LayoutGrid } from 'lucide-react';
+import { TOOLS } from './toolCatalog';
 
+// 홈 + 도구 4개. 라벨·아이콘은 toolCatalog 에서 가져온다
+// (예전엔 여기서 따로 적어서 홈 카드와 탭 이름이 갈라질 수 있었다)
 const TABS = [
-    { id: 'maker', label: '판서 제작기', Icon: Scissors },
-    { id: 'extractor', label: '답 추출기', Icon: Sparkles },
-    { id: 'splitter', label: 'PDF 분할기', Icon: Split },
-    { id: 'toimage', label: 'PDF ↔ 이미지', Icon: ArrowLeftRight },
+    { id: 'home', label: '홈', Icon: LayoutGrid },
+    ...TOOLS.map(({ id, label, Icon, tag }) => ({ id, label, Icon, ai: tag === 'AI' })),
 ];
 
 export default function Header({
     onZoomIn,
     onZoomOut,
     onZoomReset,
-    onOpenPageModal,
     onOpenFile,
+    onBeforePick,
     zoomLevel = 'Fit',
     isLoading = false,
-    activeTab = 'maker',
+    activeTab = 'home',
     onTabChange,
-    hasPdfFile = false,
+    fileName = null,
 }) {
+    const hasPdfFile = !!fileName;
     return (
         <header className="fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between pl-5 pr-4 glass-strong">
             {/* Brand + Tabs */}
@@ -43,7 +46,7 @@ export default function Header({
 
                 {/* Tabs — single accent with sliding indicator */}
                 <nav className="flex items-center gap-0.5">
-                    {TABS.map(({ id, label, Icon }) => {
+                    {TABS.map(({ id, label, Icon, ai }) => {
                         const isActive = activeTab === id;
                         return (
                             <button
@@ -67,16 +70,33 @@ export default function Header({
                                 )}
                                 <Icon className="w-3.5 h-3.5 relative z-10" strokeWidth={2} />
                                 <span className="relative z-10">{label}</span>
+                                {ai && (
+                                    <span className="relative z-10 text-[9px] font-bold px-1 py-px rounded text-violet-300 border border-violet-400/30 bg-violet-400/10">
+                                        AI
+                                    </span>
+                                )}
                             </button>
                         );
                     })}
                 </nav>
             </div>
 
-            {/* Right controls — only on maker tab AND only after a PDF is loaded
-                (otherwise the empty-state card already shows the open button) */}
-            {activeTab === 'maker' && hasPdfFile && (
-                <div className="flex items-center gap-2.5">
+            {/* Right controls */}
+            <div className="flex items-center gap-2.5">
+
+                {/* 지금 열린 파일 — 어느 탭에서든 보인다.
+                    (예전에는 maker 탭에서만 떠서 다른 탭의 헤더가 텅 비었다) */}
+                {fileName && (
+                    <div className="hidden md:flex items-center gap-2 h-9 px-3 rounded-lg glass max-w-[260px]">
+                        <FileText className="w-3.5 h-3.5 text-amber-300 shrink-0" strokeWidth={1.75} />
+                        <span className="text-[12px] text-zinc-300 truncate" title={fileName}>
+                            {fileName}
+                        </span>
+                    </div>
+                )}
+
+                {activeTab === 'maker' && hasPdfFile && (
+                  <>
                     {/* Zoom cluster */}
                     <div className="flex items-center h-9 rounded-lg glass overflow-hidden">
                         <IconBtn onClick={onZoomOut} aria-label="축소">
@@ -96,18 +116,6 @@ export default function Header({
                         </IconBtn>
                     </div>
 
-                    {/* Page navigator */}
-                    <button
-                        onClick={onOpenPageModal}
-                        className="press h-9 flex items-center gap-2 px-3 rounded-lg glass hover:bg-white/[0.045] transition-colors group"
-                    >
-                        <FileText className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-200 transition-colors" strokeWidth={1.75} />
-                        <span className="text-[12px] text-zinc-300 font-medium">페이지</span>
-                        <span className="numeral text-[10px] px-1.5 py-px rounded bg-white/5 border border-white/8 text-zinc-400">
-                            All
-                        </span>
-                    </button>
-
                     {isLoading && (
                         <div className="flex items-center gap-2 text-[12px] px-2.5 h-9 rounded-lg glass">
                             <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" strokeWidth={2} />
@@ -115,8 +123,17 @@ export default function Header({
                         </div>
                     )}
 
-                    {/* Primary CTA — single accent */}
-                    <label className="press h-9 flex items-center gap-2 pl-3 pr-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold cursor-pointer transition-colors shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_24px_-6px_rgba(251,191,36,0.6)] group">
+                    {/* Primary CTA — single accent.
+                        ★ picker freeze 회귀 (2026-05-20): 기존 PDF/크롭이 메모리에 있는 채로
+                        OS file picker 열면 Chrome 렌더러가 GC 압력으로 "응답 없음" 상태로 빠짐.
+                        flushSync 로 cleanup 을 동기 적용한 뒤에 input 을 클릭해 picker 가 가벼운
+                        상태에서 열리도록 한다. */}
+                    <label
+                        className="press h-9 flex items-center gap-2 pl-3 pr-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold cursor-pointer transition-colors shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_24px_-6px_rgba(251,191,36,0.6)] group"
+                        onClick={() => {
+                            if (onBeforePick) flushSync(() => onBeforePick());
+                        }}
+                    >
                         <FolderOpen className="w-3.5 h-3.5" strokeWidth={2.25} />
                         <span className="text-[13px] tracking-tight">PDF 열기</span>
                         <input
@@ -126,8 +143,9 @@ export default function Header({
                             onChange={onOpenFile}
                         />
                     </label>
-                </div>
-            )}
+                  </>
+                )}
+            </div>
         </header>
     );
 }

@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useCropContext } from '../context/CropContext';
 import { ImageGenerator } from '../services/ImageGenerator';
-import { AutoCropService } from '../services/AutoCropService';
+import { MergeService } from '../services/MergeService';
+import { useToast } from '../context/ToastContext';
 
 const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop }) {
-    const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings } = useCropContext();
+    const toast = useToast();
+    const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings, copiedCropId, markCopied } = useCropContext();
     const [isDrawing, setIsDrawing] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -183,51 +185,16 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 return;
             }
 
-            let finalRect = currentRect;
+            // 수동 드래그는 그린 그대로 자른다.
+            //
+            // 예전엔 '자동 보정'이 켜져 있으면 드래그한 영역을 픽셀 분석
+            // (AutoCropService.getMultiBlocks)으로 다시 쪼갰다. 실측 결과
+            // (2026-10-05, 시험지 20문제를 넉넉히 드래그한 상황 재현)
+            // 20개 중 8개가 2~4조각으로 찢어졌고 IoU 평균 0.77 이었다.
+            // 사용자가 그린 사각형이 가장 정확한 의도다. 건드리지 않는다.
 
-            // Only apply smart snap if 'Auto Crop' is enabled in settings
-            if (settings.autoCrop) {
-
-                try {
-                    // Use the calculated pixelRect directly
-                    // 2. Get Multiple Blocks (Splitting)
-                    // Note: AutoCropService expects Canvas Pixels
-                    // Scale sensitivity implementation
-                    const sensitivityScale = renderScale / 1.5;
-                    const adjustedSensitivity = (settings.sensitivity || 30) * sensitivityScale;
-                    const refinedPixelRects = AutoCropService.getMultiBlocks(canvas, pixelRect, adjustedSensitivity);
-
-                    // 3. Add crop for EACH block found
-                    for (const rect of refinedPixelRects) {
-                        const finalRect = {
-                            x: rect.x / renderScale,
-                            y: rect.y / renderScale,
-                            width: rect.width / renderScale,
-                            height: rect.height / renderScale
-                        };
-
-                        if (finalRect.width > 5 && finalRect.height > 5) {
-                            const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
-                            addCrop({
-                                pageNum,
-                                ...finalRect,
-                                imageUrl
-                            });
-                        }
-                    }
-
-                    // Clear current rect and return, as we've already added crops
-                    setCurrentRect(null);
-                    return;
-                } catch (error) {
-                    console.error("Auto Crop Failed:", error);
-                    // Fallback to manual crop below
-                }
-            }
-
-            // Fallback for manual mode (Auto Crop OFF or Error)
-            if (finalRect.width > 5 && finalRect.height > 5) {
-                // Ensure finalRect is normalized to renderScale for accuracy
+            if (currentRect.width > 5 && currentRect.height > 5) {
+                // 캔버스 픽셀 → 논리 좌표(renderScale 기준)로 환산
                 const finalRectNormalized = {
                     x: pixelRect.x / renderScale,
                     y: pixelRect.y / renderScale,
@@ -295,6 +262,23 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
                 updateCrop(selectedCropId, { ...finalRect, imageUrl });
                 setActiveCropOverride(null);
+            } else {
+                // Pointer down + up without movement = simple click on a crop.
+                // Auto-copy that crop's image to clipboard.
+                const clicked = crops.find(c => c.id === selectedCropId);
+                if (clicked?.imageUrl) {
+                    try {
+                        const ok = await MergeService.copyToClipboard(clicked.imageUrl);
+                        if (ok) {
+                            markCopied(clicked.id);
+                        } else {
+                            toast.error('클립보드 복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해주세요.');
+                        }
+                    } catch (err) {
+                        console.error('Auto-copy on click failed', err);
+                        toast.error('클립보드 복사 중 오류가 발생했습니다.');
+                    }
+                }
             }
 
             setInitialCropRect(null);
@@ -428,12 +412,15 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
 
                 // 논리적 좌표 -> DOM 픽셀 변환
                 const displayScale = renderScale / actualScale;
+                const isCopied = copiedCropId === crop.id;
                 return (
                     <div
                         key={crop.id}
-                        className={`absolute border-2 transition-all ${selectedCropId === crop.id
-                            ? 'border-blue-500 bg-blue-500/20 z-20 shadow-[0_0_0_2px_rgba(59,130,246,0.3)]'
-                            : 'border-red-500 bg-red-500/10 hover:border-red-600 hover:bg-red-500/20 z-10'
+                        className={`absolute border-2 transition-all ${isCopied
+                            ? 'border-emerald-400 bg-emerald-400/20 z-30 shadow-[0_0_0_2px_rgba(52,211,153,0.4)]'
+                            : selectedCropId === crop.id
+                                ? 'border-blue-500 bg-blue-500/20 z-20 shadow-[0_0_0_2px_rgba(59,130,246,0.3)]'
+                                : 'border-red-500 bg-red-500/10 hover:border-red-600 hover:bg-red-500/20 z-10'
                             }`}
                         style={{
                             left: `${crop.x * displayScale}px`,
@@ -445,6 +432,13 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         onPointerMove={handleCropPointerMove}
                         onPointerUp={handleCropPointerUp}
                     >
+                        {isCopied && (
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none">
+                                <div className="px-2 py-1 rounded-md bg-emerald-500 text-white text-[11px] font-semibold shadow-lg whitespace-nowrap">
+                                    ✓ 복사됨
+                                </div>
+                            </div>
+                        )}
                         {/* Delete Button (Visible on hover or select) */}
                         {/* Delete Button & Resize Handles */}
                         {(selectedCropId === crop.id) && (

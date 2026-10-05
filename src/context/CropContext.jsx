@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 const CropContext = createContext();
@@ -16,10 +16,9 @@ export function CropProvider({ children }) {
         maxHeight: 1600,
         useMaxHeight: false,
         isGlobalMode: false,
-        autoCrop: true,
-        sensitivity: 30,
+        autoCrop: true,   // 일괄 모드에서 AI 문제 인식 사용 여부
         mergeWidth: 800,
-        mergeGap: 50,
+        mergeGap: 800,
         renderScale: 3.0  // PDF 렌더링 해상도 (1.0 ~ 6.0)
     });
 
@@ -67,6 +66,46 @@ export function CropProvider({ children }) {
         setCrops(newCrops);
     }, []);
 
+    // 자동 정렬 (일괄 자동 인식 후 호출됨).
+    // 우선순위:
+    //   1) AI가 label("01", "10" 등)을 반환한 경우 → 페이지×번호 순
+    //   2) label 없으면 → 페이지×y(같으면 x) 순 (2단 레이아웃 보정)
+    const sortCrops = useCallback(() => {
+        setCrops(prev => {
+            const parseLabel = (l) => {
+                if (!l) return NaN;
+                const m = String(l).match(/\d+/);
+                return m ? parseInt(m[0], 10) : NaN;
+            };
+            const haveLabels = prev.length > 0 && prev.every(c => Number.isFinite(parseLabel(c.label)));
+            if (haveLabels) {
+                return [...prev].sort((a, b) => {
+                    if (a.pageNum !== b.pageNum) return a.pageNum - b.pageNum;
+                    return parseLabel(a.label) - parseLabel(b.label);
+                });
+            }
+            return [...prev].sort((a, b) => {
+                if (a.pageNum !== b.pageNum) return a.pageNum - b.pageNum;
+                // 행이 거의 같으면(50px 이내) x 순(열 순), 아니면 y 순
+                if (Math.abs(a.y - b.y) < 50) return a.x - b.x;
+                return a.y - b.y;
+            });
+        });
+    }, []);
+
+    // 복사 피드백 — 캔버스 클릭이든 사이드바 클릭이든 어디서든 호출하면
+    // 해당 크롭에 "복사됨" 표시가 잠깐 떴다가 사라진다.
+    const [copiedCropId, setCopiedCropId] = useState(null);
+    const copiedTimerRef = useRef(null);
+    const markCopied = useCallback((id) => {
+        if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+        setCopiedCropId(id);
+        copiedTimerRef.current = setTimeout(() => {
+            setCopiedCropId(null);
+            copiedTimerRef.current = null;
+        }, 1200);
+    }, []);
+
     return (
         <CropContext.Provider value={{
             crops,
@@ -75,8 +114,11 @@ export function CropProvider({ children }) {
             updateCrop,
             clearCrops,
             reorderCrops,
+            sortCrops,
             selectedCropId,
             setSelectedCropId,
+            copiedCropId,
+            markCopied,
             settings,
             updateSettings
         }}>

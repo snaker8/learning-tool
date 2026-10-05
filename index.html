@@ -2,12 +2,48 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>Learning Tool Studio</title>
+    <meta name="description" content="교재에서 문제만 잘라 수업 판서로. PDF 분할·이미지 변환·정답표 추출까지 한 곳에서." />
+
+    <!-- 파비콘 -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+
+    <!-- 모바일 홈 화면 -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="LT Studio" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- 설치형(크롬 앱 / PWA) -->
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#121215" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- 링크 썸네일 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Learning Tool Studio" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:url" content="https://learning-tool-studio.web.app/" />
+    <meta property="og:title" content="Learning Tool Studio — 교재에서 문제만 잘라 수업 판서로" />
+    <meta property="og:description" content="PDF를 열고 드래그하면 문제 단위로 잘립니다. PDF 분할·이미지 변환·정답표 추출까지. 파일은 사용자의 컴퓨터에서만 처리됩니다." />
+    <meta property="og:image" content="https://learning-tool-studio.web.app/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Learning Tool Studio — 교재에서 문제만 잘라 수업 판서로" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Learning Tool Studio — 교재에서 문제만 잘라 수업 판서로" />
+    <meta name="twitter:description" content="PDF를 열고 드래그하면 문제 단위로 잘립니다. 파일은 사용자의 컴퓨터에서만 처리됩니다." />
+    <meta name="twitter:image" content="https://learning-tool-studio.web.app/og-image.png" />
+
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/style.min.css" />
-    <title>Learning Tool Studio</title>
   </head>
   <body>
     <div id="root"></div>
