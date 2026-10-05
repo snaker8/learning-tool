@@ -232,7 +232,7 @@ export default function Sidebar() {
                                 </span>
                             </label>
                             <p className="text-[10px] text-zinc-600 -mt-1 leading-relaxed">
-                                일괄 모드에서만 동작 — 끄면 지정한 영역을 모든 페이지에서 그대로 자릅니다
+                                드래그한 영역을 문제 단위로 쪼갭니다. 끄면 그린 그대로 한 장으로 잘립니다.
                             </p>
 
                             <div className="pt-3 border-t border-white/[0.05]">

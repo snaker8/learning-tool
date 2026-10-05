@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useCropContext } from '../context/CropContext';
 import { ImageGenerator } from '../services/ImageGenerator';
+import { AiCropService } from '../services/AiCropService';
 import { MergeService } from '../services/MergeService';
 import { useToast } from '../context/ToastContext';
 
@@ -15,6 +16,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
     const [currentRect, setCurrentRect] = useState(null);
     const containerRef = useRef(null);
     const [activeCropOverride, setActiveCropOverride] = useState(null);
+    const [isDetecting, setIsDetecting] = useState(false);
     // null = not yet measured. We must not render existing crops until measured,
     // otherwise they flash at wrong size on every (re)mount during scroll.
     const [actualScale, setActualScale] = useState(null);
@@ -185,13 +187,41 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 return;
             }
 
-            // 수동 드래그는 그린 그대로 자른다.
+            // 드래그한 영역을 문제 단위로 쪼갠다 — 'AI 문제 인식'이 켜져 있을 때.
             //
-            // 예전엔 '자동 보정'이 켜져 있으면 드래그한 영역을 픽셀 분석
-            // (AutoCropService.getMultiBlocks)으로 다시 쪼갰다. 실측 결과
-            // (2026-10-05, 시험지 20문제를 넉넉히 드래그한 상황 재현)
-            // 20개 중 8개가 2~4조각으로 찢어졌고 IoU 평균 0.77 이었다.
-            // 사용자가 그린 사각형이 가장 정확한 의도다. 건드리지 않는다.
+            // 예전엔 픽셀 분석(AutoCropService.getMultiBlocks)으로 쪼갰는데,
+            // 실측(2026-10-05, 시험지 20문제를 넉넉히 드래그한 상황 재현)에서
+            // 20개 중 8개가 2~4조각으로 찢어졌다(IoU 0.77). 교재 레이아웃마다
+            // 결과가 달라 상수로 맞출 수 없어 AI 검출로 바꿨다.
+            // AI 가 영역 안에서 문제를 못 찾으면 그린 그대로 한 장으로 자른다.
+            if (settings.autoCrop) {
+                setIsDetecting(true);
+                try {
+                    const boxes = await AiCropService.detectProblems(canvas, pixelRect, { roiMode: 'strict' });
+                    if (boxes.length > 0) {
+                        for (const r of boxes) {
+                            const rect = {
+                                x: r.x / renderScale,
+                                y: r.y / renderScale,
+                                width: r.width / renderScale,
+                                height: r.height / renderScale,
+                            };
+                            if (rect.width <= 5 || rect.height <= 5) continue;
+                            const imageUrl = await ImageGenerator.generateCropImage(canvas, rect, renderScale);
+                            addCrop({ pageNum, ...rect, imageUrl, label: r.label || '' });
+                        }
+                        setCurrentRect(null);
+                        setIsDetecting(false);
+                        return;
+                    }
+                    toast.info('이 영역에서 문제를 찾지 못해 그린 그대로 잘랐습니다.');
+                } catch (err) {
+                    console.error('AI 분할 실패:', err);
+                    toast.error(`AI 인식 실패 — 그린 그대로 잘랐습니다. (${err?.message || '알 수 없는 오류'})`);
+                } finally {
+                    setIsDetecting(false);
+                }
+            }
 
             if (currentRect.width > 5 && currentRect.height > 5) {
                 // 캔버스 픽셀 → 논리 좌표(renderScale 기준)로 환산
@@ -404,6 +434,15 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
         >
+            {isDetecting && (
+                <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 backdrop-blur-[2px] pointer-events-none">
+                    <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-zinc-950/85 border border-white/10 shadow-lg">
+                        <div className="w-4 h-4 rounded-full border-2 border-zinc-700 border-t-amber-400 animate-spin" />
+                        <span className="text-[12.5px] font-medium text-zinc-100">문제 인식 중…</span>
+                    </div>
+                </div>
+            )}
+
             {/* Existing Crops — gated on a real measurement to avoid flicker on remount */}
             {actualScale !== null && pageCrops.map(originalCrop => {
                 const crop = (activeCropOverride && activeCropOverride.id === originalCrop.id)

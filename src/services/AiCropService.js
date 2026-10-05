@@ -7,10 +7,16 @@ import { getAppCheckToken } from '../lib/firebase';
 export class AiCropService {
     /**
      * @param {HTMLCanvasElement} canvas — the full page canvas (canvas pixels)
-     * @param {{x:number,y:number,width:number,height:number}|null} [roi] — user ROI in canvas pixels (passed as hint)
+     * @param {{x:number,y:number,width:number,height:number}|null} [roi] — user ROI in canvas pixels
+     * @param {{roiMode?: 'column'|'strict'}} [opts]
+     *   column: ROI 를 "열 힌트"로만 쓴다 (일괄 모드 — 페이지마다 문제의 Y 위치가
+     *           다르므로 X 겹침만 본다)
+     *   strict: ROI 안에 실제로 들어있는 문제만 남긴다 (수동 드래그 — 사용자가
+     *           이 페이지의 이 영역을 콕 집어 그린 것이다)
      * @returns {Promise<Array<{x:number,y:number,width:number,height:number,label?:string}>>}
      */
-    static async detectProblems(canvas, roi = null) {
+    static async detectProblems(canvas, roi = null, opts = {}) {
+        const roiMode = opts.roiMode === 'strict' ? 'strict' : 'column';
         // Downsample for transmission. Bounding-box detection doesn't need
         // 3x render-scale resolution — ~1500px wide is plenty and saves
         // ~50% transfer + inference time. Boxes are normalized 0–1000, so
@@ -123,7 +129,11 @@ export class AiCropService {
         // page to page (problem 09 might be top on page 1, middle on page 3),
         // so filtering by Y from the user's first-page ROI would drop valid
         // problems. We keep boxes whose X range overlaps the ROI's X range.
-        const filtered = roi ? validated.filter(r => AiCropService._xOverlap(r, roi)) : validated;
+        const filtered = !roi
+            ? validated
+            : roiMode === 'strict'
+                ? validated.filter(r => AiCropService._insideRoi(r, roi))
+                : validated.filter(r => AiCropService._xOverlap(r, roi));
         const deduped = AiCropService._removeOverlaps(filtered);
 
         if (raw.length !== deduped.length) {
@@ -159,6 +169,26 @@ export class AiCropService {
         if (r.x + r.width > canvas.width + 2) return false;
         if (r.y + r.height > canvas.height + 2) return false;
         return true;
+    }
+
+    /**
+     * 박스가 사용자가 그린 영역 안에 "들어있다"고 볼 수 있는가.
+     * 면적의 55% 이상이 ROI 안에 있거나, 박스 중심이 ROI 안에 있으면 채택.
+     * (사용자가 문제 경계를 딱 맞춰 그리지 않으므로 양쪽 조건을 둔다)
+     */
+    static _insideRoi(box, roi) {
+        const ix = Math.max(box.x, roi.x);
+        const iy = Math.max(box.y, roi.y);
+        const ax = Math.min(box.x + box.width, roi.x + roi.width);
+        const ay = Math.min(box.y + box.height, roi.y + roi.height);
+        const iw = Math.max(0, ax - ix);
+        const ih = Math.max(0, ay - iy);
+        if (iw === 0 || ih === 0) return false;
+        const ratio = (iw * ih) / (box.width * box.height);
+        if (ratio >= 0.55) return true;
+        const cx = box.x + box.width / 2;
+        const cy = box.y + box.height / 2;
+        return cx >= roi.x && cx <= roi.x + roi.width && cy >= roi.y && cy <= roi.y + roi.height;
     }
 
     /** Box's X range overlaps ROI's X range by ≥ 20% of box width. */
