@@ -62,16 +62,28 @@ export class MergeService {
         }
 
         // 4. Draw images
+        // 그린 직후 src 를 비워 디코드된 비트맵을 바로 놓아준다. 크롭 50개를
+        // 한꺼번에 합치면 디코드 비트맵만 수백 MB 가 되므로, 들고 있는 시간을
+        // 최소로 줄인다 (2026-10-06 메모리 점검).
         let currentY = 0;
         scaledDimensions.forEach((item) => {
             ctx.drawImage(item.img, 0, currentY, finalWidth, item.h);
             currentY += item.h + finalGap;
+            item.img.src = '';
         });
 
-        const dataUrl = canvas.toDataURL('image/png');
-        // 호출자가 자동 조정을 사용자에게 알릴 수 있도록 메타 정보를 같이 반환.
+        // base64 dataURL 대신 blob URL 로 돌려준다.
+        // 800×30,000 PNG 의 dataURL 은 수십 MB 짜리 문자열이고, 클립보드로
+        // 보낼 때 fetch 로 또 한 벌 복사됐다. blob 은 복사가 없고 revoke 로
+        // 즉시 반납된다 (2026-10-06 메모리 점검).
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        // 합치기용 캔버스는 최대 800×30,000(약 96MB)까지 커진다. 반드시 반납.
+        canvas.width = 0;
+        canvas.height = 0;
+        if (!blob) throw new Error('병합 이미지를 만들지 못했습니다.');
+
         return {
-            dataUrl,
+            dataUrl: URL.createObjectURL(blob),   // 호출부 호환을 위해 이름 유지
             finalGap,
             finalWidth,
             adjusted: finalGap !== gap || finalWidth !== width,
@@ -121,10 +133,17 @@ export class MergeService {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, w, h);
-        const url = canvas.toDataURL('image/png');
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
         canvas.width = 0;
         canvas.height = 0;
-        return url;
+        return blob ? URL.createObjectURL(blob) : imageUrl;
+    }
+
+    /** 복사 후 임시 blob URL 을 반납한다. 원본(크롭) URL 은 건드리지 않는다. */
+    static releaseTemp(url, original) {
+        if (url && url !== original && typeof url === 'string' && url.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+        }
     }
 
     static async copyToClipboard(dataUrl) {

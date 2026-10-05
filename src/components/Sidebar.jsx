@@ -43,6 +43,7 @@ export default function Sidebar() {
         try {
             const toCopy = await MergeService.resizeForCopy(crop.imageUrl, settings);
             const success = await MergeService.copyToClipboard(toCopy);
+            MergeService.releaseTemp(toCopy, crop.imageUrl);
             if (success) {
                 markCopied(crop.id);
             } else {
@@ -66,6 +67,7 @@ export default function Sidebar() {
 
             const result = await MergeService.mergeImages(urls, mergeWidth, mergeGap);
             const success = await MergeService.copyToClipboard(result.dataUrl);
+            MergeService.releaseTemp(result.dataUrl, null);
 
             if (success) {
                 setMergeStatus('success');
@@ -109,6 +111,7 @@ export default function Sidebar() {
             try {
                 const toCopy = await MergeService.resizeForCopy(crop.imageUrl, settings);
                 const success = await MergeService.copyToClipboard(toCopy);
+                MergeService.releaseTemp(toCopy, crop.imageUrl);
                 if (success) {
                     markCopied(crop.id);
                 } else {

@@ -55,7 +55,21 @@ export function CropProvider({ children }) {
     }, [selectedCropId]);
 
     const updateCrop = useCallback((id, updates) => {
-        setCrops(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+        setCrops(prev => prev.map(c => {
+            if (c.id !== id) return c;
+            // 이미지가 새로 만들어졌으면 이전 blob 을 반드시 반납한다.
+            // (크롭 이동·크기조절·방향키 이동마다 새 이미지가 생기는데, 예전엔
+            //  옛 URL 을 놔둬서 작업할수록 메모리가 쌓였다 — 2026-10-06)
+            for (const key of ['imageUrl', 'thumbUrl']) {
+                const next = updates[key];
+                const prevUrl = c[key];
+                if (next && prevUrl && next !== prevUrl &&
+                    typeof prevUrl === 'string' && prevUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(prevUrl);
+                }
+            }
+            return { ...c, ...updates };
+        }));
     }, []);
 
     const setPageDetections = useCallback((pageNum, boxes) => {
