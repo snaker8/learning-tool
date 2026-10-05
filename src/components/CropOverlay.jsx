@@ -576,32 +576,33 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                             <span>다시 인식</span>
                         </button>
 
-                        {/* 드래그했을 때 어떻게 잘리는지 — 정밀 작업을 위해 눈에 보이게 둔다.
-                            (Alt 를 누른 채 놓으면 이번만 '그린 대로') */}
-                        <div className="flex items-stretch rounded-md overflow-hidden border border-white/15 backdrop-blur-md ml-1">
-                            <span className="px-2 py-1.5 bg-black/70 text-zinc-400 text-[11px] font-medium">드래그</span>
-                            {[
-                                { on: true, label: '문제에 맞춤' },
-                                { on: false, label: '그린 대로' },
-                            ].map(({ on, label }) => (
-                                <button
-                                    key={label}
-                                    onClick={() => updateSettings({ snapToProblem: on })}
-                                    className={`px-2 py-1.5 text-[11px] font-medium transition-colors border-l border-white/15 ${
-                                        !!settings.snapToProblem === on
-                                            ? 'bg-amber-400 text-zinc-950 font-semibold'
-                                            : 'bg-black/60 text-zinc-300 hover:bg-black/80'
-                                    }`}
-                                    title={on
-                                        ? '대충 드래그해도 인식된 문제 경계에 맞춰 잘립니다'
-                                        : '그린 사각형 그대로 잘립니다 (문제 일부만 떼어낼 때)'}
-                                >
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
                     </>
                 )}
+
+                {/* 수동 드래그 — AI 인식과 짝이 되는 다른 갈래다. 처음부터 보이게 둔다.
+                    (Alt 를 누른 채 놓으면 이번만 '그린 대로') */}
+                <div className="flex items-stretch rounded-lg overflow-hidden border border-white/15 shadow-lg backdrop-blur-md ml-1">
+                    <span className="flex items-center px-2.5 bg-black/70 text-zinc-300 text-[11.5px] font-semibold">수동 드래그</span>
+                    {[
+                        { on: true, label: '문제에 맞춤' },
+                        { on: false, label: '그린 대로' },
+                    ].map(({ on, label }) => (
+                        <button
+                            key={label}
+                            onClick={() => updateSettings({ snapToProblem: on })}
+                            className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors border-l border-white/15 ${
+                                !!settings.snapToProblem === on
+                                    ? 'bg-amber-400 text-zinc-950 font-semibold'
+                                    : 'bg-black/60 text-zinc-300 hover:bg-black/80'
+                            }`}
+                            title={on
+                                ? '대충 드래그해도 인식된 문제 경계에 맞춰 잘립니다 (아직 인식 전이면 그때 한 번 인식합니다)'
+                                : '그린 사각형 그대로 잘립니다 — 문제 일부만 떼어낼 때. 호출 없음'}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* 검출 후보 — 클릭하면 담긴다 */}
