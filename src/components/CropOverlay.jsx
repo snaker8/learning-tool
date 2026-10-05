@@ -252,9 +252,34 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 return;
             }
 
-            // 드래그는 그린 그대로 자른다 — 즉시, 호출 없음.
-            // 문제 단위 분할이 필요하면 페이지의 '문제 인식' 버튼을 눌러
-            // 후보를 띄우고 클릭해서 담는다 (호출 1회 = 약 ₩6, 페이지당 한 번).
+            // 이 페이지를 이미 인식해 뒀으면, 드래그 범위에 걸친 문제들로 즉시 쪼갠다.
+            // (호출 없음 — 검출 결과는 페이지에 들고 있다. 2문제를 덮으면 2개로 갈린다)
+            // Alt 를 누른 채 놓으면 분할 없이 그린 그대로 자른다.
+            if (pageDetections && pageDetections.length > 0 && !e.altKey) {
+                const roi = {
+                    x: pixelRect.x / canvas.width,
+                    y: pixelRect.y / canvas.height,
+                    width: pixelRect.width / canvas.width,
+                    height: pixelRect.height / canvas.height,
+                };
+                const matches = pageDetections.filter((c) => AiCropService.boxInsideRoi(c, roi));
+
+                // 한 문제 안에서 작게 그린 경우(그림만·표만 떼기)는 의도대로 그대로 자른다.
+                const roiArea = roi.width * roi.height;
+                const insideOne =
+                    matches.length === 1 &&
+                    roiArea < 0.6 * matches[0].width * matches[0].height;
+
+                if (matches.length > 0 && !insideOne) {
+                    for (const cand of matches) {
+                        if (!isAdded(cand)) await addCandidate(cand);
+                    }
+                    setCurrentRect(null);
+                    return;
+                }
+            }
+
+            // 그 외에는 그린 그대로 — 즉시, 호출 없음.
             if (currentRect.width > 5 && currentRect.height > 5) {
                 // 캔버스 픽셀 → 논리 좌표(renderScale 기준)로 환산
                 const finalRectNormalized = {

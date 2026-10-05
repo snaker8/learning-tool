@@ -176,6 +176,10 @@ export class AiCropService {
      * 면적의 55% 이상이 ROI 안에 있거나, 박스 중심이 ROI 안에 있으면 채택.
      * (사용자가 문제 경계를 딱 맞춰 그리지 않으므로 양쪽 조건을 둔다)
      */
+    static boxInsideRoi(box, roi) {
+        return AiCropService._insideRoi(box, roi);
+    }
+
     static _insideRoi(box, roi) {
         const ix = Math.max(box.x, roi.x);
         const iy = Math.max(box.y, roi.y);
