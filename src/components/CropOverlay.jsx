@@ -4,7 +4,7 @@ import { ImageGenerator } from '../services/ImageGenerator';
 import { AiCropService } from '../services/AiCropService';
 import { MergeService } from '../services/MergeService';
 import { useToast } from '../context/ToastContext';
-import { Sparkles, Check, RefreshCw } from 'lucide-react';
+import { Sparkles, Check, RefreshCw, Layers } from 'lucide-react';
 
 const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop }) {
     const toast = useToast();
@@ -245,13 +245,6 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 width: currentRect.width * ratio,
                 height: currentRect.height * ratio
             };
-
-            // Global Mode Check
-            if (settings.isGlobalMode && onGlobalCrop) {
-                onGlobalCrop(pixelRect, pageNum);
-                setCurrentRect(null);
-                return;
-            }
 
             // 이 페이지를 이미 인식해 뒀으면, 드래그 범위에 걸친 문제들로 즉시 쪼갠다.
             // (호출 없음 — 검출 결과는 페이지에 들고 있다. 2문제를 덮으면 2개로 갈린다)
@@ -510,22 +503,35 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 </div>
             )}
 
-            {/* AI 문제 인식 — 누를 때만 호출한다 (페이지당 1회, 약 ₩6).
-                결과는 담기 전까지 '후보'로만 떠 있고, 클릭해야 크롭이 된다. */}
+            {/* 인식 버튼 — 페이지 위에 항상 보인다. 누를 때만 호출한다.
+                '이 페이지 인식' = 1회(약 ₩6) → 후보 표시 + 드래그 스냅 활성화
+                '전체 페이지'   = 모든 페이지 검출 후 전부 담기 (페이지당 약 ₩6) */}
             <div
                 className="absolute top-2 left-2 z-50 flex items-center gap-1.5"
                 onPointerDown={(e) => e.stopPropagation()}
             >
                 {!pageDetections ? (
-                    <button
-                        onClick={handleDetect}
-                        disabled={isDetecting}
-                        className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/55 hover:bg-violet-500 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/10 transition-colors disabled:opacity-60"
-                        title="이 페이지의 문제를 AI로 찾아 후보로 표시합니다 (약 ₩6)"
-                    >
-                        <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
-                        <span>문제 인식</span>
-                    </button>
+                    <>
+                        <button
+                            onClick={handleDetect}
+                            disabled={isDetecting}
+                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-violet-500/90 hover:bg-violet-400 text-white text-[11.5px] font-semibold backdrop-blur-md border border-violet-300/30 shadow-lg transition-colors disabled:opacity-60"
+                            title="이 페이지의 문제를 찾습니다. 그 다음부터 드래그가 문제 경계에 딱 맞춰집니다 (약 ₩6)"
+                        >
+                            <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                            <span>이 페이지 인식</span>
+                        </button>
+                        {onGlobalCrop && (
+                            <button
+                                onClick={() => onGlobalCrop(null, pageNum)}
+                                className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-violet-500 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/15 shadow-lg transition-colors"
+                                title="모든 페이지의 문제를 찾아 전부 담습니다 (페이지당 약 ₩6)"
+                            >
+                                <Layers className="w-3.5 h-3.5" strokeWidth={2} />
+                                <span>전체 페이지</span>
+                            </button>
+                        )}
+                    </>
                 ) : (
                     <>
                         <button

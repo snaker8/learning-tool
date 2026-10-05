@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Scissors, Settings, GripVertical, Trash2, Maximize2, Layers, Loader2, Check, X, ChevronRight, ChevronLeft, FileStack, Sparkles } from 'lucide-react';
+import { Scissors, Settings, GripVertical, Trash2, Maximize2, Layers, Loader2, Check, X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { useCropContext } from '../context/CropContext';
 import { MergeService } from '../services/MergeService';
 import { Reorder, AnimatePresence, motion } from 'framer-motion';
@@ -16,7 +16,6 @@ export default function Sidebar() {
 
     const {
         copyWidth, maxHeight, useMaxHeight,
-        isGlobalMode, autoCrop,
         mergeWidth, mergeGap, renderScale
     } = settings;
 
@@ -196,48 +195,16 @@ export default function Sidebar() {
 
                     {/* §02 — Detection Settings */}
                     <Section num="02" title="설정" Icon={Settings}>
-                        {/* Toggle card — 일괄 모드 */}
-                        <button
-                            onClick={() => updateSettings({ isGlobalMode: !isGlobalMode })}
-                            className={`press w-full text-left rounded-xl border transition-all p-3.5 ${
-                                isGlobalMode
-                                    ? 'bg-amber-400/[0.06] border-amber-400/25'
-                                    : 'bg-white/[0.02] border-white/[0.06] hover:border-white/10'
-                            }`}
-                        >
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <FileStack className={`w-3.5 h-3.5 ${isGlobalMode ? 'text-amber-300' : 'text-zinc-500'}`} strokeWidth={1.75} />
-                                        <span className={`text-[13px] font-semibold ${isGlobalMode ? 'text-amber-200' : 'text-zinc-300'}`}>
-                                            전체 문제 자동 인식
-                                        </span>
-                                    </div>
-                                    <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">
-                                        선택한 범위를 모든 페이지에서 AI로 자동 분할
-                                    </p>
-                                </div>
-                                <Toggle on={isGlobalMode} />
-                            </div>
-                        </button>
+                        {/* 인식 버튼은 시험지 위에 있다 (페이지 왼쪽 위).
+                            여기 토글로 모드를 켜고 드래그까지 해야 하던 걸 없앴다. */}
+                        <p className="text-[11px] text-zinc-500 leading-relaxed">
+                            문제 인식은 <span className="text-violet-300 font-medium">시험지 왼쪽 위 버튼</span>에서 합니다.
+                            <br />· <span className="text-zinc-300">이 페이지 인식</span> — 문제를 찾아 후보로 띄우고, 이후 드래그가 문제 경계에 딱 맞춰집니다
+                            <br />· <span className="text-zinc-300">전체 페이지</span> — 모든 페이지의 문제를 찾아 전부 담습니다
+                            <br />드래그만 하면 그린 그대로 잘립니다 (즉시·무료).
+                        </p>
 
                         <div className="mt-3 space-y-3">
-                            <label className="flex items-center gap-2.5 cursor-pointer select-none group">
-                                <input
-                                    type="checkbox"
-                                    checked={autoCrop}
-                                    onChange={(e) => updateSettings({ autoCrop: e.target.checked })}
-                                    className="accent-amber-400 w-4 h-4 rounded cursor-pointer"
-                                />
-                                <span className="text-[13px] font-medium text-zinc-200 group-hover:text-zinc-50 transition-colors">
-                                    일괄 모드에서 AI로 분할
-                                </span>
-                            </label>
-                            <p className="text-[10px] text-zinc-600 -mt-1 leading-relaxed">
-                                위 '전체 문제 자동 인식'에만 적용됩니다. 끄면 지정한 범위를 모든 페이지에서 그대로 자릅니다.
-                                <br />낱장 작업은 드래그(즉시·무료) 또는 페이지 왼쪽 위 '문제 인식' 버튼을 쓰세요.
-                            </p>
-
                             <div className="pt-3 border-t border-white/[0.05]">
                                 <Slider
                                     label="PDF 해상도"

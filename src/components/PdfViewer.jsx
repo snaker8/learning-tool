@@ -246,7 +246,9 @@ export default function PdfViewer({ file, zoomScale }) {
     const { addCrop, crops, sortCrops } = useCropContext();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const processGlobalCrop = useCallback(async (rect, sourcePageNum) => { // rect is in Unscaled Coord (Viewport / Scale)
+    // rect === null 이면 ROI 없이 "모든 페이지의 모든 문제"를 검출한다.
+    // (페이지 위 '전체 페이지' 버튼이 이 경로를 쓴다 — 드래그가 필요 없다)
+    const processGlobalCrop = useCallback(async (rect) => {
         if (!pdfDoc) return;
 
         const totalPages = pdfDoc.numPages;
@@ -269,7 +271,7 @@ export default function PdfViewer({ file, zoomScale }) {
             const estCost = totalPages * PAGE_COST_KRW;
             const estSec = Math.round((totalPages / 4) * 5);
             const ok = await toast.confirm({
-                title: `${totalPages}페이지에 AI 문제 인식을 적용할까요?`,
+                title: `${totalPages}페이지 전체에서 문제를 찾을까요?`,
                 message:
                     `예상 비용 약 ₩${estCost.toLocaleString()} (페이지당 ~₩${PAGE_COST_KRW})
 ` +
@@ -298,12 +300,11 @@ export default function PdfViewer({ file, zoomScale }) {
                     const context = canvas.getContext('2d');
                     await page.render({ canvasContext: context, viewport }).promise;
 
-                    if (settings.autoCrop) {
-                        const pixelRect = rect;
+                    {
                         // AI 검출만 쓴다. 픽셀 분석 폴백은 제거했다 —
                         // 실측에서 과검출이 심해(한 페이지 4문제를 7~11개로 반환)
                         // 조용히 틀린 결과를 주는 것보다 실패를 알리는 편이 낫다.
-                        const refinedRects = await AiCropService.detectProblems(canvas, pixelRect);
+                        const refinedRects = await AiCropService.detectProblems(canvas, rect || null);
                         if (!refinedRects || refinedRects.length === 0) {
                             failedPages.push(pageNum);
                             return;
@@ -321,15 +322,6 @@ export default function PdfViewer({ file, zoomScale }) {
                             // 자동 정렬 시 사용.
                             addCrop({ pageNum, ...unscaledRect, imageUrl, label: r.label || '' });
                         }
-                    } else {
-                        const unscaledRect = {
-                            x: rect.x / baseScale,
-                            y: rect.y / baseScale,
-                            width: rect.width / baseScale,
-                            height: rect.height / baseScale,
-                        };
-                        const imageUrl = await ImageGenerator.generateCropImage(canvas, unscaledRect, baseScale);
-                        addCrop({ pageNum, ...unscaledRect, imageUrl });
                     }
                 } finally {
                     if (canvas) { canvas.width = 0; canvas.height = 0; }
@@ -369,7 +361,7 @@ export default function PdfViewer({ file, zoomScale }) {
         } finally {
             setIsProcessing(false);
         }
-    }, [pdfDoc, rotation, RENDER_SCALE, settings.autoCrop, addCrop, sortCrops, toast]);
+    }, [pdfDoc, rotation, RENDER_SCALE, addCrop, sortCrops, toast]);
 
     return (
         <div className="flex flex-col items-center gap-8 py-2 w-full max-w-[1200px]">

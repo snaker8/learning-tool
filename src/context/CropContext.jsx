@@ -19,8 +19,6 @@ export function CropProvider({ children }) {
         copyWidth: 1200,
         maxHeight: 1600,
         useMaxHeight: false,
-        isGlobalMode: false,
-        autoCrop: true,   // 일괄 모드에서 AI 문제 인식 사용 여부
         mergeWidth: 800,
         mergeGap: 800,
         renderScale: 3.0  // PDF 렌더링 해상도 (1.0 ~ 6.0)
