@@ -159,6 +159,22 @@ export default function Sidebar() {
 
             {!isCollapsed ? (
                 <>
+                    {/* 화질은 작업 중에도 자주 바꾸는 값이라 접지 않고 밖에 둔다. */}
+                    <div className="px-5 pt-4 pb-3 shrink-0 border-b border-white/[0.05]">
+                        <Slider
+                            label="화질 (PDF 해상도)"
+                            value={renderScale || 3.0}
+                            min={1.0}
+                            max={6.0}
+                            step={0.5}
+                            format={(v) => `${v.toFixed(1)}x`}
+                            onChange={(v) => updateSettings({ renderScale: v })}
+                        />
+                        <p className="text-[10px] text-zinc-600 mt-2 leading-relaxed">
+                            높을수록 고화질 — 메모리 사용 증가. 바꾸면 그 페이지를 다시 그립니다.
+                        </p>
+                    </div>
+
                     {/* 설정 — 한 번 정해두면 거의 안 바꾸는 값들이라 접어 둔다.
                         자리를 문제 목록(미리보기)에 몰아주는 것이 목적이다. */}
                     <button
@@ -167,9 +183,9 @@ export default function Sidebar() {
                     >
                         <div className="flex items-center gap-2.5">
                             <Settings className="w-3.5 h-3.5 text-zinc-500" strokeWidth={1.75} />
-                            <span className="text-[12px] font-medium text-zinc-400">설정</span>
+                            <span className="text-[12px] font-medium text-zinc-400">개별 복사 설정</span>
                             <span className="numeral text-[10.5px] text-zinc-600">
-                                복사 {copyWidth}px · {(renderScale || 3).toFixed(1)}x
+                                개별 복사 {copyWidth}px{useMaxHeight ? ` · 세로 ${maxHeight}px` : ''}
                             </span>
                         </div>
                         <ChevronRight className={`w-3.5 h-3.5 text-zinc-600 transition-transform ${showSettings ? 'rotate-90' : ''}`} />
@@ -217,23 +233,6 @@ export default function Sidebar() {
                             <br />· <span className="text-zinc-300">전체 페이지</span> — 모든 페이지의 문제를 찾아 전부 담습니다
                             <br />드래그만 하면 그린 그대로 잘립니다 (즉시·무료).
                         </p>
-
-                        <div className="mt-3 space-y-3">
-                            <div className="pt-3 border-t border-white/[0.05]">
-                                <Slider
-                                    label="PDF 해상도"
-                                    value={renderScale || 3.0}
-                                    min={1.0}
-                                    max={6.0}
-                                    step={0.5}
-                                    format={(v) => `${v.toFixed(1)}x`}
-                                    onChange={(v) => updateSettings({ renderScale: v })}
-                                />
-                                <p className="text-[10px] text-zinc-600 mt-2 leading-relaxed">
-                                    높을수록 고화질 — 메모리 사용 증가
-                                </p>
-                            </div>
-                        </div>
 
                         </div>
                     )}
