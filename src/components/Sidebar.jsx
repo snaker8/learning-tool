@@ -22,6 +22,7 @@ export default function Sidebar() {
     const [isMerging, setIsMerging] = useState(false);
     const [mergeStatus, setMergeStatus] = useState(null);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     // Local sidebar uses the context's copiedCropId. Keep a local alias for the
     // existing JSX to avoid a sweeping rename.
     const copiedId = copiedCropId;
@@ -158,8 +159,24 @@ export default function Sidebar() {
 
             {!isCollapsed ? (
                 <>
-                    {/* §01 — Copy Settings */}
-                    <Section num="01" title="개별 복사 설정" hint="Ctrl+C" Icon={Scissors}>
+                    {/* 설정 — 한 번 정해두면 거의 안 바꾸는 값들이라 접어 둔다.
+                        자리를 문제 목록(미리보기)에 몰아주는 것이 목적이다. */}
+                    <button
+                        onClick={() => setShowSettings(v => !v)}
+                        className="px-5 py-2.5 flex items-center justify-between shrink-0 border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <Settings className="w-3.5 h-3.5 text-zinc-500" strokeWidth={1.75} />
+                            <span className="text-[12px] font-medium text-zinc-400">설정</span>
+                            <span className="numeral text-[10.5px] text-zinc-600">
+                                복사 {copyWidth}px · {(renderScale || 3).toFixed(1)}x
+                            </span>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 text-zinc-600 transition-transform ${showSettings ? 'rotate-90' : ''}`} />
+                    </button>
+
+                    {showSettings && (
+                        <div className="shrink-0 border-b border-white/[0.05] bg-black/20 px-5 py-4 space-y-4">
                         <div className="grid grid-cols-2 gap-3">
                             <Field label="가로 (px)">
                                 <input
@@ -191,10 +208,7 @@ export default function Sidebar() {
                                 />
                             </Field>
                         </div>
-                    </Section>
 
-                    {/* §02 — Detection Settings */}
-                    <Section num="02" title="설정" Icon={Settings}>
                         {/* 인식 버튼은 시험지 위에 있다 (페이지 왼쪽 위).
                             여기 토글로 모드를 켜고 드래그까지 해야 하던 걸 없앴다. */}
                         <p className="text-[11px] text-zinc-500 leading-relaxed">
@@ -220,7 +234,9 @@ export default function Sidebar() {
                                 </p>
                             </div>
                         </div>
-                    </Section>
+
+                        </div>
+                    )}
 
                     {/* §03 — List header */}
                     <div className="px-5 py-3.5 flex items-center justify-between border-y border-white/[0.05] shrink-0 bg-white/[0.015]">
@@ -328,13 +344,13 @@ export default function Sidebar() {
                                                     <Trash2 className="w-3 h-3" strokeWidth={2} />
                                                 </button>
                                             </div>
-                                            <div className="h-24 bg-black/40 rounded-lg flex items-center justify-center text-[10px] text-zinc-700 overflow-hidden border border-white/[0.04] relative dot-pattern">
+                                            <div className="min-h-[72px] max-h-[300px] bg-white rounded-lg flex items-center justify-center text-[10px] text-zinc-400 overflow-hidden border border-white/[0.04] relative">
                                                 {crop.imageUrl ? (
                                                     <img
                                                         src={crop.imageUrl}
                                                         alt="Crop preview"
                                                         loading="lazy"
-                                                        className="h-full object-contain relative z-10 pointer-events-none"
+                                                        className="w-full h-auto max-h-[300px] object-contain relative z-10 pointer-events-none"
                                                     />
                                                 ) : "No Preview"}
                                             </div>
