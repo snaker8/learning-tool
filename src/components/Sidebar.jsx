@@ -230,11 +230,12 @@ export default function Sidebar() {
                                     className="accent-amber-400 w-4 h-4 rounded cursor-pointer"
                                 />
                                 <span className="text-[13px] font-medium text-zinc-200 group-hover:text-zinc-50 transition-colors">
-                                    AI 문제 인식
+                                    일괄 모드에서 AI로 분할
                                 </span>
                             </label>
                             <p className="text-[10px] text-zinc-600 -mt-1 leading-relaxed">
-                                드래그한 영역을 문제 단위로 쪼갭니다. 끄면 그린 그대로 한 장으로 잘립니다.
+                                위 '전체 문제 자동 인식'에만 적용됩니다. 끄면 지정한 범위를 모든 페이지에서 그대로 자릅니다.
+                                <br />낱장 작업은 드래그(즉시·무료) 또는 페이지 왼쪽 위 '문제 인식' 버튼을 쓰세요.
                             </p>
 
                             <div className="pt-3 border-t border-white/[0.05]">

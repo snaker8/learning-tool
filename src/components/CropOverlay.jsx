@@ -4,10 +4,11 @@ import { ImageGenerator } from '../services/ImageGenerator';
 import { AiCropService } from '../services/AiCropService';
 import { MergeService } from '../services/MergeService';
 import { useToast } from '../context/ToastContext';
+import { Sparkles, Check, RefreshCw } from 'lucide-react';
 
 const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop }) {
     const toast = useToast();
-    const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings, copiedCropId, markCopied } = useCropContext();
+    const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings, copiedCropId, markCopied, detections, setPageDetections } = useCropContext();
     const [isDrawing, setIsDrawing] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -17,6 +18,70 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
     const containerRef = useRef(null);
     const [activeCropOverride, setActiveCropOverride] = useState(null);
     const [isDetecting, setIsDetecting] = useState(false);
+    const [showCandidates, setShowCandidates] = useState(true);
+
+    const pageDetections = detections[pageNum] || null;
+
+    /* 후보가 이미 담겼는지 — 같은 자리에 크롭이 있으면 담긴 것으로 본다. */
+    const isAdded = (cand) => {
+        if (!canvas) return false;
+        const cx = cand.x * canvas.width / renderScale;
+        const cy = cand.y * canvas.height / renderScale;
+        const cw = cand.width * canvas.width / renderScale;
+        const ch = cand.height * canvas.height / renderScale;
+        return pageCrops.some((c) => {
+            const ix = Math.max(0, Math.min(cx + cw, c.x + c.width) - Math.max(cx, c.x));
+            const iy = Math.max(0, Math.min(cy + ch, c.y + c.height) - Math.max(cy, c.y));
+            const inter = ix * iy;
+            if (!inter) return false;
+            return inter / Math.min(cw * ch, c.width * c.height) > 0.5;
+        });
+    };
+
+    const addCandidate = async (cand) => {
+        if (!canvas) return;
+        const rect = {
+            x: cand.x * canvas.width / renderScale,
+            y: cand.y * canvas.height / renderScale,
+            width: cand.width * canvas.width / renderScale,
+            height: cand.height * canvas.height / renderScale,
+        };
+        if (rect.width <= 5 || rect.height <= 5) return;
+        const imageUrl = await ImageGenerator.generateCropImage(canvas, rect, renderScale);
+        addCrop({ pageNum, ...rect, imageUrl, label: cand.label || '' });
+    };
+
+    const handleDetect = async () => {
+        if (!canvas || isDetecting) return;
+        setIsDetecting(true);
+        try {
+            const boxes = await AiCropService.detectProblems(canvas, null);
+            // 캔버스 크기에 독립적인 0~1 비율로 저장 — 확대/해상도가 바뀌어도 쓸 수 있다.
+            const normalized = boxes.map((b) => ({
+                x: b.x / canvas.width,
+                y: b.y / canvas.height,
+                width: b.width / canvas.width,
+                height: b.height / canvas.height,
+                label: b.label || '',
+            }));
+            setPageDetections(pageNum, normalized);
+            setShowCandidates(true);
+            if (normalized.length === 0) toast.info('이 페이지에서 문제를 찾지 못했습니다. 직접 드래그해 주세요.');
+        } catch (err) {
+            console.error('문제 인식 실패:', err);
+            toast.error(`문제 인식 실패 — ${err?.message || '알 수 없는 오류'}`);
+        } finally {
+            setIsDetecting(false);
+        }
+    };
+
+    const addAllCandidates = async () => {
+        if (!pageDetections) return;
+        for (const cand of pageDetections) {
+            if (!isAdded(cand)) await addCandidate(cand);
+        }
+    };
+
     // null = not yet measured. We must not render existing crops until measured,
     // otherwise they flash at wrong size on every (re)mount during scroll.
     const [actualScale, setActualScale] = useState(null);
@@ -187,44 +252,9 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 return;
             }
 
-            // 드래그한 영역을 문제 단위로 쪼갠다 — 'AI 문제 인식'이 켜져 있을 때.
-            //
-            // 예전엔 픽셀 분석(AutoCropService.getMultiBlocks)으로 쪼갰는데,
-            // 실측(2026-10-05, 시험지 20문제를 넉넉히 드래그한 상황 재현)에서
-            // 20개 중 8개가 2~4조각으로 찢어졌다(IoU 0.77). 교재 레이아웃마다
-            // 결과가 달라 상수로 맞출 수 없어 AI 검출로 바꿨다.
-            // AI 가 영역 안에서 문제를 못 찾으면 그린 그대로 한 장으로 자른다.
-            if (settings.autoCrop) {
-                // 이 페이지를 이미 검출해 뒀으면 호출 없이 즉시 끝난다 — 스피너도 안 띄운다.
-                const instant = AiCropService.hasCached(canvas);
-                if (!instant) setIsDetecting(true);
-                try {
-                    const boxes = await AiCropService.detectProblems(canvas, pixelRect, { roiMode: 'strict' });
-                    if (boxes.length > 0) {
-                        for (const r of boxes) {
-                            const rect = {
-                                x: r.x / renderScale,
-                                y: r.y / renderScale,
-                                width: r.width / renderScale,
-                                height: r.height / renderScale,
-                            };
-                            if (rect.width <= 5 || rect.height <= 5) continue;
-                            const imageUrl = await ImageGenerator.generateCropImage(canvas, rect, renderScale);
-                            addCrop({ pageNum, ...rect, imageUrl, label: r.label || '' });
-                        }
-                        setCurrentRect(null);
-                        setIsDetecting(false);
-                        return;
-                    }
-                    toast.info('이 영역에서 문제를 찾지 못해 그린 그대로 잘랐습니다.');
-                } catch (err) {
-                    console.error('AI 분할 실패:', err);
-                    toast.error(`AI 인식 실패 — 그린 그대로 잘랐습니다. (${err?.message || '알 수 없는 오류'})`);
-                } finally {
-                    setIsDetecting(false);
-                }
-            }
-
+            // 드래그는 그린 그대로 자른다 — 즉시, 호출 없음.
+            // 문제 단위 분할이 필요하면 페이지의 '문제 인식' 버튼을 눌러
+            // 후보를 띄우고 클릭해서 담는다 (호출 1회 = 약 ₩6, 페이지당 한 번).
             if (currentRect.width > 5 && currentRect.height > 5) {
                 // 캔버스 픽셀 → 논리 좌표(renderScale 기준)로 환산
                 const finalRectNormalized = {
@@ -445,6 +475,78 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     </div>
                 </div>
             )}
+
+            {/* AI 문제 인식 — 누를 때만 호출한다 (페이지당 1회, 약 ₩6).
+                결과는 담기 전까지 '후보'로만 떠 있고, 클릭해야 크롭이 된다. */}
+            <div
+                className="absolute top-2 left-2 z-50 flex items-center gap-1.5"
+                onPointerDown={(e) => e.stopPropagation()}
+            >
+                {!pageDetections ? (
+                    <button
+                        onClick={handleDetect}
+                        disabled={isDetecting}
+                        className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/55 hover:bg-violet-500 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/10 transition-colors disabled:opacity-60"
+                        title="이 페이지의 문제를 AI로 찾아 후보로 표시합니다 (약 ₩6)"
+                    >
+                        <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                        <span>문제 인식</span>
+                    </button>
+                ) : (
+                    <>
+                        <button
+                            onClick={addAllCandidates}
+                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-400 hover:bg-amber-300 text-zinc-950 text-[11.5px] font-semibold backdrop-blur-md transition-colors"
+                        >
+                            <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            <span>전체 담기 {pageDetections.filter(c => !isAdded(c)).length}</span>
+                        </button>
+                        <button
+                            onClick={() => setShowCandidates(v => !v)}
+                            className="press px-2.5 py-1.5 rounded-md bg-black/55 hover:bg-black/75 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/10 transition-colors"
+                        >
+                            {showCandidates ? '후보 숨기기' : `후보 보기 ${pageDetections.length}`}
+                        </button>
+                        <button
+                            onClick={handleDetect}
+                            disabled={isDetecting}
+                            className="press px-2 py-1.5 rounded-md bg-black/55 hover:bg-violet-500 text-white backdrop-blur-md border border-white/10 transition-colors disabled:opacity-60"
+                            title="다시 인식 (약 ₩6)"
+                        >
+                            <RefreshCw className="w-3.5 h-3.5" strokeWidth={2} />
+                        </button>
+                    </>
+                )}
+            </div>
+
+            {/* 검출 후보 — 클릭하면 담긴다 */}
+            {actualScale !== null && showCandidates && pageDetections && canvas && pageDetections.map((cand, i) => {
+                const added = isAdded(cand);
+                const left = cand.x * canvas.width / actualScale;
+                const top = cand.y * canvas.height / actualScale;
+                const width = cand.width * canvas.width / actualScale;
+                const height = cand.height * canvas.height / actualScale;
+                return (
+                    <button
+                        key={`cand-${i}`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={() => !added && addCandidate(cand)}
+                        className={`absolute group/cand border-2 border-dashed rounded-sm transition-colors ${
+                            added
+                                ? 'border-emerald-400/40 bg-emerald-400/[0.07] cursor-default'
+                                : 'border-violet-400/70 bg-violet-400/[0.06] hover:bg-violet-400/20 hover:border-violet-300'
+                        }`}
+                        style={{ left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` }}
+                        title={added ? '이미 담김' : '클릭하면 담깁니다'}
+                    >
+                        <span className={`absolute -top-2.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold leading-none ${
+                            added ? 'bg-emerald-400 text-zinc-950' : 'bg-violet-400 text-zinc-950'
+                        }`}>
+                            {added ? '담김' : (cand.label || '문제')}
+                        </span>
+                    </button>
+                );
+            })}
 
             {/* Existing Crops — gated on a real measurement to avoid flicker on remount */}
             {actualScale !== null && pageCrops.map(originalCrop => {

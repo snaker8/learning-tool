@@ -10,6 +10,10 @@ export function useCropContext() {
 
 export function CropProvider({ children }) {
     const [crops, setCrops] = useState([]);
+    // 페이지별 AI 검출 결과(후보). 좌표는 캔버스 크기에 독립적인 0~1 비율로 보관해
+    // 확대/해상도가 바뀌어도 그대로 쓴다. { [pageNum]: [{x,y,width,height,label}] }
+    // 한 번 누른 페이지를 다시 호출하지 않게 하는 것이 목적이다 (호출 1회 = 약 ₩6).
+    const [detections, setDetections] = useState({});
     const [selectedCropId, setSelectedCropId] = useState(null);
     const [settings, setSettings] = useState({
         copyWidth: 1200,
@@ -50,6 +54,19 @@ export function CropProvider({ children }) {
         setCrops(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
     }, []);
 
+    const setPageDetections = useCallback((pageNum, boxes) => {
+        setDetections(prev => ({ ...prev, [pageNum]: boxes }));
+    }, []);
+
+    const clearPageDetections = useCallback((pageNum) => {
+        setDetections(prev => {
+            if (!(pageNum in prev)) return prev;
+            const next = { ...prev };
+            delete next[pageNum];
+            return next;
+        });
+    }, []);
+
     const clearCrops = useCallback(() => {
         setCrops(prev => {
             prev.forEach(crop => {
@@ -60,6 +77,7 @@ export function CropProvider({ children }) {
             return [];
         });
         setSelectedCropId(null);
+        setDetections({});
     }, []);
 
     const reorderCrops = useCallback((newCrops) => {
@@ -109,6 +127,9 @@ export function CropProvider({ children }) {
     return (
         <CropContext.Provider value={{
             crops,
+            detections,
+            setPageDetections,
+            clearPageDetections,
             addCrop,
             removeCrop,
             updateCrop,

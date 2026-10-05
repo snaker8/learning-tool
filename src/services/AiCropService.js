@@ -4,17 +4,6 @@ import { getAppCheckToken } from '../lib/firebase';
  * Server-side Gemini-vision proxy for per-page problem bounding boxes.
  * Returns canvas-pixel rectangles ready to use as crops.
  */
-/**
- * 페이지(캔버스) 단위 검출 결과 캐시.
- *
- * 수동 드래그는 한 페이지에서 여러 번 일어난다. 드래그마다 Gemini 를 부르면
- * 매번 4~5초 · ₩6 이 든다. 검출 결과는 ROI 와 무관한 "이 페이지의 모든 문제"
- * 이므로 한 번만 받아두고 영역 필터만 다시 하면 된다.
- * 캔버스가 다시 그려지면(확대/회전/해상도 변경) 객체가 바뀌어 캐시도 자연히
- * 버려진다. WeakMap 이라 페이지가 언마운트되면 같이 수거된다.
- */
-const pageCache = new WeakMap();
-
 export class AiCropService {
     /**
      * @param {HTMLCanvasElement} canvas — the full page canvas (canvas pixels)
@@ -28,12 +17,12 @@ export class AiCropService {
      */
     static async detectProblems(canvas, roi = null, opts = {}) {
         const roiMode = opts.roiMode === 'strict' ? 'strict' : 'column';
-        const useCache = opts.cache !== false;
+        const pageBoxes = await AiCropService._detectPage(canvas, roi);
+        return AiCropService._applyRoi(pageBoxes, canvas, roi, roiMode);
+    }
 
-        const cached = useCache ? pageCache.get(canvas) : null;
-        if (cached) {
-            return AiCropService._applyRoi(cached, canvas, roi, roiMode);
-        }
+    /** 실제 호출 — 이 페이지의 모든 문제 박스를 돌려준다 (ROI 필터 전). */
+    static async _detectPage(canvas, roi) {
         // Downsample for transmission. Bounding-box detection doesn't need
         // 3x render-scale resolution — ~1500px wide is plenty and saves
         // ~50% transfer + inference time. Boxes are normalized 0–1000, so
@@ -141,17 +130,9 @@ export class AiCropService {
             return { ...r, x: x0, y: y0, width: Math.max(1, x1 - x0), height: Math.max(1, y1 - y0) };
         });
 
-        const validated = AiCropService._removeOverlaps(
+        return AiCropService._removeOverlaps(
             clamped.filter(r => AiCropService._isValidBox(r, canvas))
         );
-        if (useCache) pageCache.set(canvas, validated);
-
-        return AiCropService._applyRoi(validated, canvas, roi, roiMode);
-    }
-
-    /** 이 페이지에서 검출된 결과가 이미 있는가 (= 드래그가 즉시 끝나는가). */
-    static hasCached(canvas) {
-        return pageCache.has(canvas);
     }
 
     /**
