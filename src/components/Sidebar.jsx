@@ -344,11 +344,12 @@ export default function Sidebar() {
                                                 </button>
                                             </div>
                                             <div className="min-h-[72px] max-h-[300px] bg-white rounded-lg flex items-center justify-center text-[10px] text-zinc-400 overflow-hidden border border-white/[0.04] relative">
-                                                {crop.imageUrl ? (
+                                                {(crop.thumbUrl || crop.imageUrl) ? (
                                                     <img
-                                                        src={crop.imageUrl}
+                                                        src={crop.thumbUrl || crop.imageUrl}
                                                         alt="Crop preview"
                                                         loading="lazy"
+                                                        decoding="async"
                                                         className="w-full h-auto max-h-[300px] object-contain relative z-10 pointer-events-none"
                                                     />
                                                 ) : "No Preview"}
@@ -598,7 +599,7 @@ export default function Sidebar() {
                                                         }}
                                                     >
                                                         {crop.imageUrl ? (
-                                                            <img src={crop.imageUrl} alt="Crop preview" className="h-full object-contain p-2 pointer-events-none" />
+                                                            <img src={crop.thumbUrl || crop.imageUrl} alt="Crop preview" loading="lazy" decoding="async" className="h-full object-contain p-2 pointer-events-none" />
                                                         ) : (
                                                             <span className="text-[10px] text-zinc-700">No Preview</span>
                                                         )}
@@ -643,7 +644,7 @@ export default function Sidebar() {
                                                 </div>
                                                 <div className="aspect-square bg-black/40 rounded-lg flex items-center justify-center relative overflow-hidden border border-white/[0.04] dot-pattern">
                                                     {crop.imageUrl ? (
-                                                        <img src={crop.imageUrl} alt="Crop preview" className="w-full h-full object-contain p-2 pointer-events-none" />
+                                                        <img src={crop.thumbUrl || crop.imageUrl} alt="Crop preview" loading="lazy" decoding="async" className="w-full h-full object-contain p-2 pointer-events-none" />
                                                     ) : (
                                                         <span className="text-[10px] text-zinc-700">No Preview</span>
                                                     )}

@@ -40,12 +40,15 @@ export function CropProvider({ children }) {
         return newCrop.id;
     }, []);
 
+    const revokeCropUrls = (crop) => {
+        for (const url of [crop?.imageUrl, crop?.thumbUrl]) {
+            if (typeof url === 'string' && url.startsWith('blob:')) URL.revokeObjectURL(url);
+        }
+    };
+
     const removeCrop = useCallback((id) => {
         setCrops(prev => {
-            const cropToRemove = prev.find(c => c.id === id);
-            if (cropToRemove && typeof cropToRemove.imageUrl === 'string' && cropToRemove.imageUrl.startsWith('blob:')) {
-                URL.revokeObjectURL(cropToRemove.imageUrl);
-            }
+            revokeCropUrls(prev.find(c => c.id === id));
             return prev.filter(c => c.id !== id);
         });
         if (selectedCropId === id) setSelectedCropId(null);
@@ -70,11 +73,7 @@ export function CropProvider({ children }) {
 
     const clearCrops = useCallback(() => {
         setCrops(prev => {
-            prev.forEach(crop => {
-                if (typeof crop.imageUrl === 'string' && crop.imageUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(crop.imageUrl);
-                }
-            });
+            prev.forEach(revokeCropUrls);
             return [];
         });
         setSelectedCropId(null);

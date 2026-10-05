@@ -47,8 +47,8 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
             height: cand.height * canvas.height / renderScale,
         };
         if (rect.width <= 5 || rect.height <= 5) return;
-        const imageUrl = await ImageGenerator.generateCropImage(canvas, rect, renderScale);
-        addCrop({ pageNum, ...rect, imageUrl, label: cand.label || '' });
+        const { imageUrl, thumbUrl } = await ImageGenerator.generateCrop(canvas, rect, renderScale);
+        addCrop({ pageNum, ...rect, imageUrl, thumbUrl, label: cand.label || '' });
     };
 
     const handleDetect = async () => {
@@ -306,12 +306,13 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     width: pixelRect.width / renderScale,
                     height: pixelRect.height / renderScale
                 };
-                const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRectNormalized, renderScale);
+                const { imageUrl, thumbUrl } = await ImageGenerator.generateCrop(canvas, finalRectNormalized, renderScale);
 
                 addCrop({
                     pageNum,
                     ...finalRectNormalized,
-                    imageUrl
+                    imageUrl,
+                    thumbUrl
                 });
             }
         }
@@ -364,8 +365,8 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
             if (activeCropOverride) {
                 // Regenerate image on drag end
                 const finalRect = { x: activeCropOverride.x, y: activeCropOverride.y, width: activeCropOverride.width, height: activeCropOverride.height };
-                const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
-                updateCrop(selectedCropId, { ...finalRect, imageUrl });
+                const { imageUrl, thumbUrl } = await ImageGenerator.generateCrop(canvas, finalRect, renderScale);
+                updateCrop(selectedCropId, { ...finalRect, imageUrl, thumbUrl });
                 setActiveCropOverride(null);
             } else {
                 // Pointer down + up without movement = simple click on a crop.
@@ -429,8 +430,8 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 const crop = crops.find(c => c.id === selectedCropId);
                 if (crop && canvas) {
                     const finalRect = { x: crop.x, y: crop.y, width: crop.width, height: crop.height };
-                    const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
-                    updateCrop(selectedCropId, { imageUrl });
+                    const { imageUrl, thumbUrl } = await ImageGenerator.generateCrop(canvas, finalRect, renderScale);
+                    updateCrop(selectedCropId, { imageUrl, thumbUrl });
                 }
             }
         };
@@ -491,8 +492,8 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
             if (activeCropOverride) {
                 // Regenerate image on resize end
                 const finalRect = { x: activeCropOverride.x, y: activeCropOverride.y, width: activeCropOverride.width, height: activeCropOverride.height };
-                const imageUrl = await ImageGenerator.generateCropImage(canvas, finalRect, renderScale);
-                updateCrop(resizeState.id, { ...finalRect, imageUrl });
+                const { imageUrl, thumbUrl } = await ImageGenerator.generateCrop(canvas, finalRect, renderScale);
+                updateCrop(resizeState.id, { ...finalRect, imageUrl, thumbUrl });
                 setActiveCropOverride(null);
             }
 

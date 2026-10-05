@@ -14,8 +14,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 // Safari/macOS has stricter canvas memory limits (~256-450MB)
 // Fix: reduce rootMargin so only 3-4 pages render simultaneously (safe even at 3.0x)
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-const SAFARI_ROOT_MARGIN = '300px 0px';
-const DEFAULT_ROOT_MARGIN = '800px 0px';
+// 한 페이지 캔버스는 3.0배율에서 1,785×2,526 = 약 18MB 다. rootMargin 이 넓으면
+// 그만큼 여러 장이 동시에 메모리에 올라간다. 800px 에서는 화면 밖 위·아래로
+// 각각 한 장씩 더 붙잡고 있었다 (2026-10-06 메모리 점검).
+const SAFARI_ROOT_MARGIN = '200px 0px';
+const DEFAULT_ROOT_MARGIN = '400px 0px';
 
 const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotation = 0, onGlobalCrop, renderScale }) {
     const containerRef = useRef(null);
@@ -57,12 +60,13 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
             height: canvasEl.height / baseScale
         };
 
-        const imageUrl = await ImageGenerator.generateCropImage(canvasEl, rect, baseScale);
+        const { imageUrl, thumbUrl } = await ImageGenerator.generateCrop(canvasEl, rect, baseScale);
 
         addCrop({
             pageNum,
             ...rect,
-            imageUrl
+            imageUrl,
+            thumbUrl
         });
     };
 
@@ -90,7 +94,11 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
 
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
-                const context = canvas.getContext('2d', { willReadFrequently: true });
+                // willReadFrequently 를 쓰지 않는다 — 켜면 캔버스가 GPU 가속을
+                // 포기하고 CPU 메모리에 올라간다. 픽셀을 직접 읽던 AutoCropService
+                // 를 삭제한 뒤로 이 페이지 캔버스에서 getImageData 를 호출하는
+                // 코드가 하나도 없는데 플래그만 남아 있었다 (2026-10-06).
+                const context = canvas.getContext('2d');
 
                 const renderContext = {
                     canvasContext: context,
@@ -317,10 +325,10 @@ export default function PdfViewer({ file, zoomScale }) {
                                 width: r.width / baseScale,
                                 height: r.height / baseScale,
                             };
-                            const imageUrl = await ImageGenerator.generateCropImage(canvas, unscaledRect, baseScale);
+                            const { imageUrl, thumbUrl } = await ImageGenerator.generateCrop(canvas, unscaledRect, baseScale);
                             // label은 Gemini가 반환한 문제 번호 ("01", "10" 등).
                             // 자동 정렬 시 사용.
-                            addCrop({ pageNum, ...unscaledRect, imageUrl, label: r.label || '' });
+                            addCrop({ pageNum, ...unscaledRect, imageUrl, thumbUrl, label: r.label || '' });
                         }
                     }
                 } finally {
