@@ -19,6 +19,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
     const [activeCropOverride, setActiveCropOverride] = useState(null);
     const [isDetecting, setIsDetecting] = useState(false);
     const [showCandidates, setShowCandidates] = useState(true);
+    const hintShownRef = useRef(false);   // 페이지당 한 번만 안내
 
     const pageDetections = detections[pageNum] || null;
 
@@ -264,11 +265,13 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 };
                 const matches = pageDetections.filter((c) => AiCropService.boxInsideRoi(c, roi));
 
-                // 한 문제 안에서 작게 그린 경우(그림만·표만 떼기)는 의도대로 그대로 자른다.
+                // 대충 그려도 문제 경계에 딱 맞추는 게 기본이다.
+                // 예외는 "한 문제 안에서 일부만 떼려는" 의도가 분명할 때뿐 —
+                // 매치가 1개이고 그 문제의 1/4 도 안 되게 작게 그렸을 때.
                 const roiArea = roi.width * roi.height;
                 const insideOne =
                     matches.length === 1 &&
-                    roiArea < 0.6 * matches[0].width * matches[0].height;
+                    roiArea < 0.25 * matches[0].width * matches[0].height;
 
                 if (matches.length > 0 && !insideOne) {
                     for (const cand of matches) {
@@ -277,6 +280,12 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     setCurrentRect(null);
                     return;
                 }
+            }
+
+            // 아직 인식하지 않은 페이지라면, 왜 안 맞춰지는지 한 번 알려준다.
+            if (!pageDetections && !hintShownRef.current) {
+                hintShownRef.current = true;
+                toast.info("'문제 인식'(페이지 왼쪽 위)을 한 번 누르면, 다음부터 드래그가 문제 경계에 딱 맞춰집니다.");
             }
 
             // 그 외에는 그린 그대로 — 즉시, 호출 없음.
