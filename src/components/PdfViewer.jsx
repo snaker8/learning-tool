@@ -252,7 +252,13 @@ export default function PdfViewer({ file, zoomScale }) {
         const totalPages = pdfDoc.numPages;
 
         // 비용 폭주 방지 — 많은 페이지에 AI 일괄 적용 시 사용자 확인.
-        // Pro 모델 기준 페이지당 ~₩10 → 100페이지 ≈ ₩1,000.
+        // 페이지당 단가(실측, 2026-10-05):
+        //   요청 1회 = 입력 1,912 tok + 출력 138 tok + 사고 641 tok (5페이지 평균)
+        //   gemini-3.8-flash $0.75/$3.75 per 1M (2026-12-31 까지 프로모션가)
+        //   → $0.0044/페이지 ≈ ₩6 (환율 1,400원 가정). 100페이지 ≈ ₩610.
+        //   참고: 이전 gemini-2.5-pro 는 사고 토큰이 10배라 ₩23/페이지였다.
+        //   2027-01-01 부터 단가가 2배가 되므로 그때 PAGE_COST_KRW 를 12로 올릴 것.
+        const PAGE_COST_KRW = 6;
         const HARD_LIMIT = 300;
         const CONFIRM_THRESHOLD = 30;
         if (totalPages > HARD_LIMIT) {
@@ -260,13 +266,14 @@ export default function PdfViewer({ file, zoomScale }) {
             return;
         }
         if (totalPages > CONFIRM_THRESHOLD) {
-            const estCost = totalPages * 10;
+            const estCost = totalPages * PAGE_COST_KRW;
+            const estSec = Math.round((totalPages / 4) * 5);
             const ok = await toast.confirm({
-                title: `${totalPages}페이지에 AI 자동 인식을 적용할까요?`,
+                title: `${totalPages}페이지에 AI 문제 인식을 적용할까요?`,
                 message:
-                    `예상 비용 약 ₩${estCost.toLocaleString()} (페이지당 ~₩10)
+                    `예상 비용 약 ₩${estCost.toLocaleString()} (페이지당 ~₩${PAGE_COST_KRW})
 ` +
-                    `페이지가 많으면 시간이 걸립니다.`,
+                    `예상 시간 약 ${estSec < 60 ? `${estSec}초` : `${Math.round(estSec / 60)}분`}.`,
                 confirmLabel: '적용',
             });
             if (!ok) return;

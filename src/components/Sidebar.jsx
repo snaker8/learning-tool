@@ -41,7 +41,8 @@ export default function Sidebar() {
     const handleQuickCopy = async (crop) => {
         if (!crop.imageUrl) return;
         try {
-            const success = await MergeService.copyToClipboard(crop.imageUrl);
+            const toCopy = await MergeService.resizeForCopy(crop.imageUrl, settings);
+            const success = await MergeService.copyToClipboard(toCopy);
             if (success) {
                 markCopied(crop.id);
             } else {
@@ -106,7 +107,8 @@ export default function Sidebar() {
         const crop = crops[index];
         if (crop?.imageUrl) {
             try {
-                const success = await MergeService.copyToClipboard(crop.imageUrl);
+                const toCopy = await MergeService.resizeForCopy(crop.imageUrl, settings);
+                const success = await MergeService.copyToClipboard(toCopy);
                 if (success) {
                     markCopied(crop.id);
                 } else {

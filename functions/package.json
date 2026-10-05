@@ -3,7 +3,7 @@
   "description": "Cloud Functions for Learning Tool Studio",
   "type": "module",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
   "scripts": {

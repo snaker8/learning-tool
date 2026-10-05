@@ -78,6 +78,55 @@ export class MergeService {
         };
     }
 
+    /**
+     * 개별 크롭을 "개별 복사 설정"(가로 px / 세로 제한)에 맞춰 리사이즈한다.
+     *
+     * 이 설정은 사이드바에 있었지만 복사 경로에서 한 번도 읽지 않아 값을 바꿔도
+     * 아무 일이 없었다(2026-10-05 확인). 클립보드에는 항상 PDF 렌더 해상도
+     * (기본 3배율) 원본이 들어가, 클래스인에 붙이면 설정과 다른 크기로 나왔다.
+     *
+     * @param {string} imageUrl - 크롭 blob URL
+     * @param {{copyWidth?:number, maxHeight?:number, useMaxHeight?:boolean}} settings
+     * @returns {Promise<string>} 리사이즈된 data URL (변경이 필요 없으면 원본 URL)
+     */
+    static async resizeForCopy(imageUrl, settings = {}) {
+        const targetW = Number(settings.copyWidth) || 0;
+        const useMax = !!settings.useMaxHeight;
+        const maxH = Number(settings.maxHeight) || 0;
+        if (targetW <= 0 && !(useMax && maxH > 0)) return imageUrl;
+
+        const img = await new Promise((resolve, reject) => {
+            const el = new Image();
+            el.onload = () => resolve(el);
+            el.onerror = reject;
+            el.src = imageUrl;
+        });
+        if (!img.width || !img.height) return imageUrl;
+
+        let w = targetW > 0 ? targetW : img.width;
+        let h = w * (img.height / img.width);
+        // 세로 제한이 켜져 있으면 가로를 더 줄여서라도 비율을 지킨다.
+        if (useMax && maxH > 0 && h > maxH) {
+            h = maxH;
+            w = h * (img.width / img.height);
+        }
+        w = Math.max(1, Math.round(w));
+        h = Math.max(1, Math.round(h));
+        if (w === img.width && h === img.height) return imageUrl;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+        const url = canvas.toDataURL('image/png');
+        canvas.width = 0;
+        canvas.height = 0;
+        return url;
+    }
+
     static async copyToClipboard(dataUrl) {
         try {
             const blob = await (await fetch(dataUrl)).blob();

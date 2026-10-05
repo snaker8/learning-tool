@@ -298,7 +298,8 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 const clicked = crops.find(c => c.id === selectedCropId);
                 if (clicked?.imageUrl) {
                     try {
-                        const ok = await MergeService.copyToClipboard(clicked.imageUrl);
+                        const toCopy = await MergeService.resizeForCopy(clicked.imageUrl, settings);
+                        const ok = await MergeService.copyToClipboard(toCopy);
                         if (ok) {
                             markCopied(clicked.id);
                         } else {
