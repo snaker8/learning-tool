@@ -8,7 +8,7 @@ import { Sparkles, Check, RefreshCw, Layers } from 'lucide-react';
 
 const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop }) {
     const toast = useToast();
-    const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings, copiedCropId, markCopied, detections, setPageDetections } = useCropContext();
+    const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings, copiedCropId, markCopied, detections, setPageDetections, updateSettings } = useCropContext();
     const [isDrawing, setIsDrawing] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -19,7 +19,6 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
     const [activeCropOverride, setActiveCropOverride] = useState(null);
     const [isDetecting, setIsDetecting] = useState(false);
     const [showCandidates, setShowCandidates] = useState(true);
-    const hintShownRef = useRef(false);   // 페이지당 한 번만 안내
 
     const pageDetections = detections[pageNum] || null;
 
@@ -246,17 +245,40 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 height: currentRect.height * ratio
             };
 
-            // 이 페이지를 이미 인식해 뒀으면, 드래그 범위에 걸친 문제들로 즉시 쪼갠다.
-            // (호출 없음 — 검출 결과는 페이지에 들고 있다. 2문제를 덮으면 2개로 갈린다)
-            // Alt 를 누른 채 놓으면 분할 없이 그린 그대로 자른다.
-            if (pageDetections && pageDetections.length > 0 && !e.altKey) {
+            // '문제에 맞춤' 모드: 드래그 범위에 걸친 문제들로 쪼갠다.
+            // 이미 인식한 페이지면 즉시(호출 0). 아직이면 이때 한 번 호출하고
+            // 결과를 페이지에 보관해 다음 드래그부터는 즉시가 된다.
+            // Alt 를 누른 채 놓으면 이번만 그린 그대로.
+            if (settings.snapToProblem && !e.altKey) {
+                let boxes = pageDetections;
+                if (!boxes) {
+                    setIsDetecting(true);
+                    try {
+                        const detected = await AiCropService.detectProblems(canvas, null);
+                        boxes = detected.map((b) => ({
+                            x: b.x / canvas.width,
+                            y: b.y / canvas.height,
+                            width: b.width / canvas.width,
+                            height: b.height / canvas.height,
+                            label: b.label || '',
+                        }));
+                        setPageDetections(pageNum, boxes);
+                    } catch (err) {
+                        console.error('문제 인식 실패:', err);
+                        toast.error(`문제 인식 실패 — 그린 그대로 잘랐습니다. (${err?.message || '알 수 없는 오류'})`);
+                        boxes = [];
+                    } finally {
+                        setIsDetecting(false);
+                    }
+                }
+
                 const roi = {
                     x: pixelRect.x / canvas.width,
                     y: pixelRect.y / canvas.height,
                     width: pixelRect.width / canvas.width,
                     height: pixelRect.height / canvas.height,
                 };
-                const matches = pageDetections.filter((c) => AiCropService.boxInsideRoi(c, roi));
+                const matches = (boxes || []).filter((c) => AiCropService.boxInsideRoi(c, roi));
 
                 // 대충 그려도 문제 경계에 딱 맞추는 게 기본이다.
                 // 예외는 "한 문제 안에서 일부만 떼려는" 의도가 분명할 때뿐 —
@@ -273,12 +295,6 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     setCurrentRect(null);
                     return;
                 }
-            }
-
-            // 아직 인식하지 않은 페이지라면, 왜 안 맞춰지는지 한 번 알려준다.
-            if (!pageDetections && !hintShownRef.current) {
-                hintShownRef.current = true;
-                toast.info("'문제 인식'(페이지 왼쪽 위)을 한 번 누르면, 다음부터 드래그가 문제 경계에 딱 맞춰집니다.");
             }
 
             // 그 외에는 그린 그대로 — 즉시, 호출 없음.
@@ -555,6 +571,30 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         >
                             <RefreshCw className="w-3.5 h-3.5" strokeWidth={2} />
                         </button>
+
+                        {/* 드래그 방식 — 정밀하게 직접 잡아야 할 때를 위해 눈에 보이게 둔다.
+                            (Alt 를 누른 채 놓으면 일시적으로 '그린 대로'가 된다) */}
+                        <div className="flex items-center rounded-md overflow-hidden border border-white/15 backdrop-blur-md ml-1">
+                            {[
+                                { on: true, label: '문제에 맞춤' },
+                                { on: false, label: '그린 대로' },
+                            ].map(({ on, label }) => (
+                                <button
+                                    key={label}
+                                    onClick={() => updateSettings({ snapToProblem: on })}
+                                    className={`px-2 py-1.5 text-[11px] font-medium transition-colors ${
+                                        !!settings.snapToProblem === on
+                                            ? 'bg-amber-400 text-zinc-950 font-semibold'
+                                            : 'bg-black/55 text-zinc-300 hover:bg-black/75'
+                                    }`}
+                                    title={on
+                                        ? '대충 드래그해도 인식된 문제 경계에 맞춰 잘립니다'
+                                        : '그린 사각형 그대로 잘립니다 (문제 일부만 떼어낼 때)'}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
                     </>
                 )}
             </div>

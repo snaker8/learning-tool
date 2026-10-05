@@ -21,7 +21,10 @@ export function CropProvider({ children }) {
         useMaxHeight: false,
         mergeWidth: 800,
         mergeGap: 800,
-        renderScale: 3.0  // PDF 렌더링 해상도 (1.0 ~ 6.0)
+        renderScale: 3.0, // PDF 렌더링 해상도 (1.0 ~ 6.0)
+        // 드래그했을 때 인식된 문제 경계로 맞출지. 끄면 그린 그대로 잘린다
+        // (한 문제를 정밀하게 잡거나, 그림·표만 떼어낼 때)
+        snapToProblem: true
     });
 
     const updateSettings = useCallback((updates) => {
