@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { motion } from 'framer-motion';
 import { ZoomIn, ZoomOut, RotateCcw, FileText, FolderOpen, Loader2, LayoutGrid } from 'lucide-react';
@@ -24,6 +24,12 @@ export default function Header({
     fileName = null,
 }) {
     const hasPdfFile = !!fileName;
+    // ★ 파일 input 은 조건부 블록 밖에 둔다 (2026-10-05 회귀 수정).
+    // 아래 'PDF 열기' 버튼은 hasPdfFile 일 때만 렌더되는데, 클릭하면
+    // flushSync(onBeforePick) 가 공유 파일을 비워 hasPdfFile 이 false 가 된다.
+    // input 이 그 블록 안에 있으면 클릭 처리 도중 동기적으로 언마운트돼
+    // picker 가 안 열리거나 열려도 onChange 가 오지 않았다 (= 파일 교체 불가).
+    const fileInputRef = useRef(null);
     return (
         <header className="fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between pl-5 pr-4 glass-strong">
             {/* Brand + Tabs */}
@@ -128,24 +134,31 @@ export default function Header({
                         OS file picker 열면 Chrome 렌더러가 GC 압력으로 "응답 없음" 상태로 빠짐.
                         flushSync 로 cleanup 을 동기 적용한 뒤에 input 을 클릭해 picker 가 가벼운
                         상태에서 열리도록 한다. */}
-                    <label
+                    <button
+                        type="button"
                         className="press h-9 flex items-center gap-2 pl-3 pr-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold cursor-pointer transition-colors shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_24px_-6px_rgba(251,191,36,0.6)] group"
                         onClick={() => {
                             if (onBeforePick) flushSync(() => onBeforePick());
+                            // 같은 파일을 다시 열어도 onChange 가 뜨도록 값을 비운다.
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                            fileInputRef.current?.click();
                         }}
                     >
                         <FolderOpen className="w-3.5 h-3.5" strokeWidth={2.25} />
                         <span className="text-[13px] tracking-tight">PDF 열기</span>
-                        <input
-                            type="file"
-                            accept="application/pdf"
-                            className="hidden"
-                            onChange={onOpenFile}
-                        />
-                    </label>
+                    </button>
                   </>
                 )}
             </div>
+
+            {/* 상시 마운트되는 파일 input — 위 주석 참조 */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={onOpenFile}
+            />
         </header>
     );
 }

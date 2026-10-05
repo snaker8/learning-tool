@@ -4,6 +4,17 @@ import { getAppCheckToken } from '../lib/firebase';
  * Server-side Gemini-vision proxy for per-page problem bounding boxes.
  * Returns canvas-pixel rectangles ready to use as crops.
  */
+/**
+ * 페이지(캔버스) 단위 검출 결과 캐시.
+ *
+ * 수동 드래그는 한 페이지에서 여러 번 일어난다. 드래그마다 Gemini 를 부르면
+ * 매번 4~5초 · ₩6 이 든다. 검출 결과는 ROI 와 무관한 "이 페이지의 모든 문제"
+ * 이므로 한 번만 받아두고 영역 필터만 다시 하면 된다.
+ * 캔버스가 다시 그려지면(확대/회전/해상도 변경) 객체가 바뀌어 캐시도 자연히
+ * 버려진다. WeakMap 이라 페이지가 언마운트되면 같이 수거된다.
+ */
+const pageCache = new WeakMap();
+
 export class AiCropService {
     /**
      * @param {HTMLCanvasElement} canvas — the full page canvas (canvas pixels)
@@ -17,6 +28,12 @@ export class AiCropService {
      */
     static async detectProblems(canvas, roi = null, opts = {}) {
         const roiMode = opts.roiMode === 'strict' ? 'strict' : 'column';
+        const useCache = opts.cache !== false;
+
+        const cached = useCache ? pageCache.get(canvas) : null;
+        if (cached) {
+            return AiCropService._applyRoi(cached, canvas, roi, roiMode);
+        }
         // Downsample for transmission. Bounding-box detection doesn't need
         // 3x render-scale resolution — ~1500px wide is plenty and saves
         // ~50% transfer + inference time. Boxes are normalized 0–1000, so
@@ -124,37 +141,39 @@ export class AiCropService {
             return { ...r, x: x0, y: y0, width: Math.max(1, x1 - x0), height: Math.max(1, y1 - y0) };
         });
 
-        const validated = clamped.filter(r => AiCropService._isValidBox(r, canvas));
-        // ROI is interpreted as a COLUMN/X-band hint only. Y position varies
-        // page to page (problem 09 might be top on page 1, middle on page 3),
-        // so filtering by Y from the user's first-page ROI would drop valid
-        // problems. We keep boxes whose X range overlaps the ROI's X range.
+        const validated = AiCropService._removeOverlaps(
+            clamped.filter(r => AiCropService._isValidBox(r, canvas))
+        );
+        if (useCache) pageCache.set(canvas, validated);
+
+        return AiCropService._applyRoi(validated, canvas, roi, roiMode);
+    }
+
+    /** 이 페이지에서 검출된 결과가 이미 있는가 (= 드래그가 즉시 끝나는가). */
+    static hasCached(canvas) {
+        return pageCache.has(canvas);
+    }
+
+    /**
+     * 페이지 단위 검출 결과에 사용자 영역을 적용한다.
+     *   column: X 겹침만 (일괄 모드 — 페이지마다 문제의 Y 위치가 다르다)
+     *   strict: 영역 안에 실제로 들어있는 것만 (수동 드래그)
+     */
+    static _applyRoi(boxes, canvas, roi, roiMode) {
         const filtered = !roi
-            ? validated
+            ? boxes
             : roiMode === 'strict'
-                ? validated.filter(r => AiCropService._insideRoi(r, roi))
-                : validated.filter(r => AiCropService._xOverlap(r, roi));
-        const deduped = AiCropService._removeOverlaps(filtered);
+                ? boxes.filter(r => AiCropService._insideRoi(r, roi))
+                : boxes.filter(r => AiCropService._xOverlap(r, roi));
 
-        if (raw.length !== deduped.length) {
-            console.info('[ai-crop] filtered', {
-                raw: raw.length,
-                validated: validated.length,
-                roiFiltered: filtered.length,
-                final: deduped.length,
-            });
-        }
-
-        // Sort: column-major (left→right), then top→bottom inside each column.
-        deduped.sort((a, b) => {
+        // 열 우선(왼→오), 열 안에서는 위→아래.
+        return [...filtered].sort((a, b) => {
             const halfW = canvas.width / 2;
             const colA = a.x + a.width / 2 < halfW ? 0 : 1;
             const colB = b.x + b.width / 2 < halfW ? 0 : 1;
             if (colA !== colB) return colA - colB;
             return a.y - b.y;
         });
-
-        return deduped;
     }
 
     static _isValidBox(r, canvas) {

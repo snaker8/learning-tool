@@ -195,7 +195,9 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
             // 결과가 달라 상수로 맞출 수 없어 AI 검출로 바꿨다.
             // AI 가 영역 안에서 문제를 못 찾으면 그린 그대로 한 장으로 자른다.
             if (settings.autoCrop) {
-                setIsDetecting(true);
+                // 이 페이지를 이미 검출해 뒀으면 호출 없이 즉시 끝난다 — 스피너도 안 띄운다.
+                const instant = AiCropService.hasCached(canvas);
+                if (!instant) setIsDetecting(true);
                 try {
                     const boxes = await AiCropService.detectProblems(canvas, pixelRect, { roiMode: 'strict' });
                     if (boxes.length > 0) {
