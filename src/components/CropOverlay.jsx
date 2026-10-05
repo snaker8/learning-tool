@@ -527,27 +527,30 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 onPointerDown={(e) => e.stopPropagation()}
             >
                 {!pageDetections ? (
-                    <>
+                    /* 처음 보는 사람도 뭘 하는 버튼인지 알도록 '무엇을' + '어디까지'로 묶는다 */
+                    <div className="flex items-stretch rounded-lg overflow-hidden border border-violet-300/30 shadow-lg backdrop-blur-md">
+                        <div className="flex items-center gap-1.5 px-2.5 bg-violet-500/90 text-white text-[11.5px] font-semibold">
+                            <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                            <span>AI 문제 인식</span>
+                        </div>
                         <button
                             onClick={handleDetect}
                             disabled={isDetecting}
-                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-violet-500/90 hover:bg-violet-400 text-white text-[11.5px] font-semibold backdrop-blur-md border border-violet-300/30 shadow-lg transition-colors disabled:opacity-60"
-                            title="이 페이지의 문제를 찾습니다. 그 다음부터 드래그가 문제 경계에 딱 맞춰집니다 (약 ₩6)"
+                            className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[11.5px] font-medium transition-colors disabled:opacity-60 border-l border-white/15"
+                            title="이 페이지의 문제를 찾아 후보로 표시합니다. 이후 드래그가 문제 경계에 딱 맞춰집니다 (약 ₩6)"
                         >
-                            <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
-                            <span>이 페이지 인식</span>
+                            이 페이지
                         </button>
                         {onGlobalCrop && (
                             <button
                                 onClick={() => onGlobalCrop(null, pageNum)}
-                                className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-violet-500 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/15 shadow-lg transition-colors"
+                                className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[11.5px] font-medium transition-colors border-l border-white/15"
                                 title="모든 페이지의 문제를 찾아 전부 담습니다 (페이지당 약 ₩6)"
                             >
-                                <Layers className="w-3.5 h-3.5" strokeWidth={2} />
-                                <span>전체 페이지</span>
+                                전체 페이지
                             </button>
                         )}
-                    </>
+                    </div>
                 ) : (
                     <>
                         <button
@@ -559,22 +562,24 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         </button>
                         <button
                             onClick={() => setShowCandidates(v => !v)}
-                            className="press px-2.5 py-1.5 rounded-md bg-black/55 hover:bg-black/75 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/10 transition-colors"
+                            className="press px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/15 transition-colors"
                         >
                             {showCandidates ? '후보 숨기기' : `후보 보기 ${pageDetections.length}`}
                         </button>
                         <button
                             onClick={handleDetect}
                             disabled={isDetecting}
-                            className="press px-2 py-1.5 rounded-md bg-black/55 hover:bg-violet-500 text-white backdrop-blur-md border border-white/10 transition-colors disabled:opacity-60"
-                            title="다시 인식 (약 ₩6)"
+                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-violet-500 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/15 transition-colors disabled:opacity-60"
+                            title="이 페이지를 다시 인식합니다 (약 ₩6)"
                         >
                             <RefreshCw className="w-3.5 h-3.5" strokeWidth={2} />
+                            <span>다시 인식</span>
                         </button>
 
-                        {/* 드래그 방식 — 정밀하게 직접 잡아야 할 때를 위해 눈에 보이게 둔다.
-                            (Alt 를 누른 채 놓으면 일시적으로 '그린 대로'가 된다) */}
-                        <div className="flex items-center rounded-md overflow-hidden border border-white/15 backdrop-blur-md ml-1">
+                        {/* 드래그했을 때 어떻게 잘리는지 — 정밀 작업을 위해 눈에 보이게 둔다.
+                            (Alt 를 누른 채 놓으면 이번만 '그린 대로') */}
+                        <div className="flex items-stretch rounded-md overflow-hidden border border-white/15 backdrop-blur-md ml-1">
+                            <span className="px-2 py-1.5 bg-black/70 text-zinc-400 text-[11px] font-medium">드래그</span>
                             {[
                                 { on: true, label: '문제에 맞춤' },
                                 { on: false, label: '그린 대로' },
@@ -582,10 +587,10 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                                 <button
                                     key={label}
                                     onClick={() => updateSettings({ snapToProblem: on })}
-                                    className={`px-2 py-1.5 text-[11px] font-medium transition-colors ${
+                                    className={`px-2 py-1.5 text-[11px] font-medium transition-colors border-l border-white/15 ${
                                         !!settings.snapToProblem === on
                                             ? 'bg-amber-400 text-zinc-950 font-semibold'
-                                            : 'bg-black/55 text-zinc-300 hover:bg-black/75'
+                                            : 'bg-black/60 text-zinc-300 hover:bg-black/80'
                                     }`}
                                     title={on
                                         ? '대충 드래그해도 인식된 문제 경계에 맞춰 잘립니다'
