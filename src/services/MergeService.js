@@ -1,13 +1,20 @@
 export class MergeService {
     /**
-     * Merges multiple image Data URLs into a single vertical image.
-     * @param {string[]} imageUrls - Array of base64 image strings
-     * @param {number} width - Target width of the final image
-     * @param {number} gap - Vertical gap between images
-     * @param {string} backgroundColor - Background color (transparent by default if null)
-     * @returns {Promise<string>} Promise resolving to the merged image Data URL
+     * 크롭 여러 개를 세로로 이어 한 장으로 만든다.
+     *
+     * 🔴 가로폭은 절대 자동으로 줄이지 않는다. 종전에는 캔버스 높이 한도에 걸리면
+     * 조용히 가로를 깎아서, 사용자는 왜 흐려졌는지 모르는 채 화질을 잃었다
+     * (2026-10-07 대표 지시: "줄이지말고 경고를 하면되잖아").
+     * 지금은 무거우면 묻고(confirmOversize), 진짜 불가능하면 에러로 알린다.
+     *
+     * @param {string[]} imageUrls - 크롭 이미지 URL 배열
+     * @param {number} width - 목표 가로폭 (원본보다 크면 원본에서 끊는다 — 부풀려도 선명해지지 않는다)
+     * @param {number} gap - 크롭 사이 세로 간격
+     * @param {string} backgroundColor - 배경색 (null 이면 투명)
+     * @param {{confirmOversize?: (info:{width:number,height:number,megapixels:number,memoryMB:number,count:number})=>Promise<boolean>}} options
+     * @returns {Promise<object|null>} 병합 결과. 사용자가 경고에서 취소하면 null.
      */
-    static async mergeImages(imageUrls, width = 800, gap = 50, backgroundColor = null) {
+    static async mergeImages(imageUrls, width = 800, gap = 50, backgroundColor = null, options = {}) {
         if (!imageUrls || imageUrls.length === 0) return null;
 
         // 1. Load all images to get dimensions
@@ -20,27 +27,54 @@ export class MergeService {
             });
         }));
 
-        // 2. Determine actual canvas dimensions.
-        // 캔버스 한도 초과 시 사용자가 설정한 *간격은 그대로 유지*하고 가로폭부터
-        // 줄인다 (사용자가 간격을 명시적으로 정한 의도를 존중). 가로폭이 100px
-        // 이하로 줄어들 정도면 에러.
-        const MAX_CANVAS_HEIGHT = 30000;
+        // 2. 캔버스 크기 결정 — 요청한 가로폭을 그대로 쓴다.
+        // 브라우저 실제 한도: 한 변 65,535px, 총 면적 2^28 px (크롬·사파리 공통 하한).
+        // 이건 '취향'이 아니라 넘으면 빈 캔버스가 나오는 물리적 벽이다.
+        const MAX_DIM = 65535;
+        const MAX_AREA = 268435456;      // 2^28
+        // 메모리 경고선 — 1600×30,000 ≈ 48Mpx ≈ 192MB. 여기까지는 실측으로 버텼다.
+        // 넘으면 깎지 않고 사용자에게 묻는다 (크롬이 탭을 날릴 수 있으므로).
+        const WARN_AREA = 48000000;
+
         const aspectSum = images.reduce((s, img) => s + img.height / img.width, 0);
-        const totalContentHeight = (w) => w * aspectSum;
         const gapsCount = Math.max(0, images.length - 1);
 
-        let finalWidth = width;
-        let finalGap = gap;
-        let totalHeight = totalContentHeight(finalWidth) + finalGap * gapsCount;
+        // 원본보다 넓게 잡아봐야 보간으로 부풀 뿐 선명해지지 않는다. 원본 폭에서 끊는다.
+        // (이건 화질을 깎는 축소가 아니라 '부풀리기 거부'다.)
+        const sourceWidth = Math.max(...images.map(img => img.width));
 
-        if (totalHeight > MAX_CANVAS_HEIGHT) {
-            const allowedWidth = (MAX_CANVAS_HEIGHT - gap * gapsCount) / aspectSum;
-            if (!Number.isFinite(allowedWidth) || allowedWidth < 100) {
-                throw new Error(`간격 ${gap}px + 크롭 ${images.length}개로는 합칠 수 없습니다. 간격을 줄이거나 크롭을 나눠주세요.`);
+        const finalWidth = Math.min(width, sourceWidth);
+        const finalGap = gap;
+        const totalHeight = Math.ceil(finalWidth * aspectSum + finalGap * gapsCount);
+        const area = finalWidth * totalHeight;
+
+        // 물리적으로 불가능한 경우만 에러 — 무엇을 어떻게 하면 되는지 숫자로 알려준다.
+        if (totalHeight > MAX_DIM || area > MAX_AREA) {
+            const fitGap = Math.floor((MAX_DIM - finalWidth * aspectSum) / Math.max(1, gapsCount));
+            const fitCount = Math.max(1, Math.floor(MAX_DIM / ((finalWidth * aspectSum) / images.length + finalGap)));
+            throw new Error(
+                `크롭 ${images.length}개 · 가로 ${finalWidth}px · 간격 ${finalGap}px 이면 ` +
+                `세로가 ${totalHeight.toLocaleString()}px 가 되어 브라우저 한도(${MAX_DIM.toLocaleString()}px)를 넘습니다. ` +
+                (fitGap > 0
+                    ? `간격을 ${fitGap}px 이하로 줄이거나, `
+                    : '') +
+                `한 번에 ${fitCount}개씩 나눠 합쳐주세요. (가로폭은 화질 때문에 자동으로 줄이지 않습니다)`
+            );
+        }
+
+        // 무겁지만 가능한 경우 — 깎지 않고 묻는다.
+        if (area > WARN_AREA && typeof options.confirmOversize === 'function') {
+            const ok = await options.confirmOversize({
+                width: finalWidth,
+                height: totalHeight,
+                megapixels: Math.round(area / 1e6),
+                memoryMB: Math.round((area * 4) / (1024 * 1024)),
+                count: images.length,
+            });
+            if (!ok) {
+                images.forEach((img) => { img.src = ''; });
+                return null;
             }
-            console.warn(`[merge] 가로폭 자동 축소 ${width}→${Math.floor(allowedWidth)}px (간격 ${gap}px 유지)`);
-            finalWidth = Math.floor(allowedWidth);
-            totalHeight = totalContentHeight(finalWidth) + finalGap * gapsCount;
         }
 
         const scaledDimensions = images.map(img => ({
@@ -86,7 +120,9 @@ export class MergeService {
             dataUrl: URL.createObjectURL(blob),   // 호출부 호환을 위해 이름 유지
             finalGap,
             finalWidth,
-            adjusted: finalGap !== gap || finalWidth !== width,
+            sourceWidth,
+            // 설정값이 원본보다 작아 화질을 버린 경우 — 사용자가 직접 정한 값일 때만 생긴다.
+            downscaled: finalWidth < sourceWidth,
         };
     }
 

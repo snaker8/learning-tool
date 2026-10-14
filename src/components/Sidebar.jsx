@@ -65,19 +65,32 @@ export default function Sidebar() {
             const urls = crops.map(c => c.imageUrl).filter(Boolean);
             if (urls.length === 0) return;
 
-            const result = await MergeService.mergeImages(urls, mergeWidth, mergeGap);
+            // 🔴 화질을 깎아서 맞추지 않는다. 무거우면 묻고, 불가능하면 에러로 알린다.
+            const result = await MergeService.mergeImages(urls, mergeWidth, mergeGap, null, {
+                confirmOversize: ({ width, height, megapixels, memoryMB, count }) =>
+                    toast.confirm({
+                        title: `크롭 ${count}개를 ${width}×${height.toLocaleString()}px 로 합칩니다`,
+                        message:
+                            `원본 화질을 그대로 유지하면 ${megapixels}백만 화소(메모리 약 ${memoryMB}MB)가 됩니다.
+` +
+                            `크롬이 버거워할 수 있습니다. 가볍게 하려면 취소하고 간격을 줄이거나 크롭을 나눠 합쳐주세요.`,
+                        confirmLabel: '이대로 합치기',
+                    }),
+            });
+            // 경고에서 취소한 경우 — 실패가 아니므로 조용히 끝낸다.
+            if (!result) return;
+
             const success = await MergeService.copyToClipboard(result.dataUrl);
             MergeService.releaseTemp(result.dataUrl, null);
 
             if (success) {
                 setMergeStatus('success');
                 setTimeout(() => setMergeStatus(null), 2000);
-                // 가로폭이 자동 축소됐다면 사용자에게 알림 — 간격이 우선이라는 사실 명시
-                if (result.adjusted && result.finalWidth !== mergeWidth) {
+                // 설정값이 원본보다 작아 화질을 버린 경우 — 사용자가 직접 정한 값이라 한 번만 짚는다.
+                if (result.downscaled) {
                     toast.info(
-                        `간격 ${mergeGap}px 를 지키려고 가로폭을 ` +
-                        `${mergeWidth}px → ${result.finalWidth}px 로 줄였습니다. ` +
-                        `더 넓게 쓰려면 간격을 줄이거나 크롭을 나눠 합쳐주세요.`
+                        `가로 ${result.finalWidth}px 로 합쳤습니다. 크롭 원본은 ${result.sourceWidth}px 라 ` +
+                        `그만큼 화질이 떨어집니다 — 선명하게 쓰려면 '가로 (px)'를 ${result.sourceWidth} 로 올려주세요.`
                     );
                 }
             } else {
@@ -409,13 +422,20 @@ export default function Sidebar() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2.5 mb-3.5">
-                            <Field label="가로 (px)" small>
+                            <Field label={`가로 (px)${mergeWidth < 1600 ? ' · 원본 1600' : ''}`} small>
                                 <input
                                     type="number"
+                                    title={mergeWidth < 1600
+                                        ? `크롭 원본은 1600px 입니다. ${mergeWidth}px 로 합치면 그만큼 줄어들어 화질이 떨어집니다.`
+                                        : '크롭 원본(1600px) 그대로 합칩니다'}
                                     value={mergeWidth}
                                     onChange={(e) => updateSettings({ mergeWidth: Number(e.target.value) })}
                                     onFocus={(e) => e.target.select()}
-                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors hover:border-white/10"
+                                    className={`numeral w-full bg-black/30 border rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors ${
+                                        mergeWidth < 1600
+                                            ? 'border-amber-400/40 hover:border-amber-400/60'
+                                            : 'border-white/[0.06] hover:border-white/10'
+                                    }`}
                                 />
                             </Field>
                             <Field label="간격 (px)" small>

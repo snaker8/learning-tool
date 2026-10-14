@@ -19,7 +19,10 @@ export function CropProvider({ children }) {
         copyWidth: 1200,
         maxHeight: 1600,
         useMaxHeight: false,
-        mergeWidth: 800,
+        // 병합 가로폭 — 크롭 원본(ImageGenerator.MAX_WIDTH = 1600px)과 맞춘다.
+        // 800px 이던 때는 모든 크롭을 절반으로 줄여 붙여서, 개별 복사(1200px)보다
+        // 눈에 띄게 뭉개졌다 (2026-10-07 확인). 줄이려면 여기가 아니라 사이드바에서.
+        mergeWidth: 1600,
         mergeGap: 800,
         renderScale: 3.0, // PDF 렌더링 해상도 (1.0 ~ 6.0)
         // 드래그했을 때 인식된 문제 경계로 맞출지. 끄면 그린 그대로 잘린다
