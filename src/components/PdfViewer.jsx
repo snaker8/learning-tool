@@ -450,7 +450,9 @@ export default function PdfViewer({ file, zoomScale }) {
     }, [pdfDoc, rotation, RENDER_SCALE, addCrop, sortCrops, toast]);
 
     return (
-        <div className="flex flex-col items-center gap-8 py-2 w-full max-w-[1200px]">
+        // 아래쪽 여백(pb-20) — 마지막 장이 화면 바닥에 딱 붙어 있으면 그 페이지
+        // 하단을 드래그할 자리가 없다. 더 스크롤해서 위로 올릴 수 있게 띄워둔다.
+        <div className="flex flex-col items-center gap-8 pt-2 pb-20 w-full max-w-[1200px]">
             {/* Global Toolbar */}
             <div className="glass-strong flex items-center justify-between px-5 py-3 rounded-xl w-full">
                 <div className="flex items-center gap-3">
