@@ -4,7 +4,7 @@ import CropOverlay from './CropOverlay';
 import { useCropContext } from '../context/CropContext';
 import { AiCropService } from '../services/AiCropService';
 import { ImageGenerator } from '../services/ImageGenerator';
-import { RotateCw, Scan } from 'lucide-react';
+import { RotateCw, Scan, Lock, Unlock, ChevronLeft, ChevronRight } from 'lucide-react';
 import React from 'react'; // Added React import for React.memo
 import { useToast } from '../context/ToastContext';
 
@@ -20,10 +20,14 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 const SAFARI_ROOT_MARGIN = '200px 0px';
 const DEFAULT_ROOT_MARGIN = '400px 0px';
 
-const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotation = 0, onGlobalCrop, renderScale, numPages }) {
+const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotation = 0, onGlobalCrop, renderScale, numPages, baseSize }) {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const [canvasEl, setCanvasEl] = useState(null);
+    // 회전하면 가로·세로가 뒤바뀐다. 예약 높이도 같이 돌아야 한다.
+    const pageAspect = baseSize
+        ? (rotation % 180 === 90 ? baseSize.h / baseSize.w : baseSize.w / baseSize.h)
+        : null;
     const [isRendered, setIsRendered] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [shouldMount, setShouldMount] = useState(false);
@@ -147,7 +151,15 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
     }, [pdfDoc, pageNum, rotation, isVisible, shouldMount, renderScale]);
 
     return (
-        <div id={`page-${pageNum}`} ref={containerRef} className="relative group shadow-2xl rounded-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 bg-white min-h-[800px] w-full max-w-[800px] flex flex-col items-center justify-center">
+        <div
+            id={`page-${pageNum}`}
+            ref={containerRef}
+            /* 🔴 높이를 미리 잡아둔다. 화면 밖으로 나가면 cleanup() 이 캔버스를 비우는데,
+               예약이 없으면 칸이 쪼그라들어 아래 내용이 통째로 밀린다 — 여러 장을
+               오갈 때 화면이 저절로 올라갔다 내려가던 원인 (2026-10-14). */
+            style={pageAspect ? { aspectRatio: String(pageAspect) } : { minHeight: 800 }}
+            className="relative group shadow-2xl rounded-lg overflow-hidden transition-transform duration-300 bg-white w-full max-w-[800px] flex flex-col items-center justify-center"
+        >
             {!shouldMount ? (
                 <div className="text-zinc-400 text-sm mono">Page {pageNum} 대기 중…</div>
             ) : !isRendered ? (
@@ -176,16 +188,17 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
             )}
 
             {/* Page Controls Overlay */}
-            <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+            <div className="absolute top-2 right-2 flex items-center gap-1.5 z-50">
                 <button
                     onClick={handleFullPageCrop}
-                    className="press bg-black/55 hover:bg-amber-400 hover:text-zinc-950 text-white p-1.5 rounded-md backdrop-blur-md border border-white/10 transition-colors"
+                    className="press opacity-0 group-hover:opacity-100 bg-black/55 hover:bg-amber-400 hover:text-zinc-950 text-white p-1.5 rounded-md backdrop-blur-md border border-white/10 transition-all"
                     title="전체 페이지 선택"
                 >
                     <Scan className="w-3.5 h-3.5" strokeWidth={1.75} />
                 </button>
+                {/* 쪽 번호는 항상 보인다 — 마우스를 올려야만 보이면 작업 중에 길을 잃는다 */}
                 <div className="numeral bg-black/55 text-white text-[11px] px-2 py-1 rounded-md backdrop-blur-md border border-white/10 font-medium">
-                    P. {pageNum}
+                    P. {pageNum}{numPages ? ` / ${numPages}` : ''}
                 </div>
             </div>
         </div>
@@ -198,17 +211,50 @@ export default function PdfViewer({ file, zoomScale }) {
     const RENDER_SCALE = settings.renderScale || 3.0;
     const [pdfDoc, setPdfDoc] = useState(null);
     const [pages, setPages] = useState([]);
+    const [pageSizes, setPageSizes] = useState({});   // { [pageNum]: {w,h} } — 칸 높이 예약용
     const [rotation, setRotation] = useState(0);
+
+    // 작업 페이지 고정 — 켜면 그 페이지만 띄운다. 스크롤이 아예 없으니
+    // 드래그 중에 화면이 움직일 일이 없다 (2026-10-14 대표 요청).
+    const [pinnedPage, setPinnedPage] = useState(null);
 
     const handleRotate = useCallback(() => {
         setRotation(prev => (prev + 90) % 360);
     }, []);
+
+    /* 지금 화면 한가운데 있는 페이지. 고정을 켤 때 보던 페이지에 그대로 걸기 위한 것 —
+       1쪽으로 튀어버리면 고정이 오히려 길을 잃게 만든다. */
+    const currentPageInView = useCallback(() => {
+        const mid = window.innerHeight / 2;
+        let best = pages[0] || 1;
+        let bestDist = Infinity;
+        for (const n of pages) {
+            const el = document.getElementById(`page-${n}`);
+            if (!el) continue;
+            const r = el.getBoundingClientRect();
+            const d = Math.abs((r.top + r.bottom) / 2 - mid);
+            if (d < bestDist) { bestDist = d; best = n; }
+        }
+        return best;
+    }, [pages]);
+
+    const togglePin = useCallback(() => {
+        setPinnedPage(prev => (prev ? null : currentPageInView()));
+    }, [currentPageInView]);
+
+    // 고정 중이면 그 한 장만 그린다 — 스크롤할 것이 없으니 화면이 움직이지 않는다.
+    const visiblePages = useMemo(
+        () => (pinnedPage ? pages.filter(n => n === pinnedPage) : pages),
+        [pages, pinnedPage]
+    );
 
     useEffect(() => {
         if (!file) return;
 
         let objectUrl = null;
         let cancelled = false;
+        setPageSizes({});
+        setPinnedPage(null);
         let loadedDoc = null;
 
         // ★ 새 PDF 로드 시작 전에 이전 doc/pages 를 먼저 비워서 PdfPage들을
@@ -238,6 +284,24 @@ export default function PdfViewer({ file, zoomScale }) {
                 loadedDoc = doc;
                 setPdfDoc(doc);
                 setPages(Array.from({ length: doc.numPages }, (_, i) => i + 1));
+
+                // 각 페이지의 원래 크기를 미리 읽어 칸 높이를 예약한다 (스크롤 튐 방지).
+                // getPage 는 메타데이터만 읽는 가벼운 호출이고, 읽은 뒤 바로 반납한다.
+                const sizes = {};
+                let idx = 1;
+                const reader = async () => {
+                    while (idx <= doc.numPages) {
+                        const n = idx++;
+                        try {
+                            const pg = await doc.getPage(n);
+                            const vp = pg.getViewport({ scale: 1, rotation: pg.rotate % 360 });
+                            sizes[n] = { w: vp.width, h: vp.height };
+                            pg.cleanup();
+                        } catch { /* 크기를 못 읽으면 그 페이지만 기본값을 쓴다 */ }
+                    }
+                };
+                await Promise.all(Array.from({ length: Math.min(8, doc.numPages) }, () => reader()));
+                if (!cancelled) setPageSizes(sizes);
             } catch (error) {
                 console.error("Error loading PDF:", error);
             }
@@ -393,13 +457,71 @@ export default function PdfViewer({ file, zoomScale }) {
                     <span className="section-num">PREVIEW</span>
                     <div className="text-zinc-100 font-semibold text-[14px] tracking-tight">PDF</div>
                 </div>
-                <button
-                    onClick={handleRotate}
-                    className="press flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 px-3.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
-                >
-                    <RotateCw className="w-3.5 h-3.5" strokeWidth={2} />
-                    <span>회전 <span className="numeral text-amber-300">{rotation}°</span></span>
-                </button>
+                <div className="flex items-center gap-2">
+                    {/* 작업 페이지 고정 — 한 장만 띄워 스크롤 자체를 없앤다 */}
+                    <div className={`flex items-stretch rounded-lg overflow-hidden border transition-colors ${
+                        pinnedPage ? 'border-amber-400/40' : 'border-white/[0.08]'
+                    }`}>
+                        <button
+                            onClick={togglePin}
+                            className={`press flex items-center gap-2 px-3 py-1.5 text-[12.5px] font-medium transition-colors ${
+                                pinnedPage
+                                    ? 'bg-amber-400 text-zinc-950 font-semibold'
+                                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200'
+                            }`}
+                            title={pinnedPage
+                                ? '고정을 풀고 전체 페이지를 다시 띄웁니다'
+                                : '한 페이지만 띄웁니다 — 드래그 중에 화면이 스크롤되지 않습니다'}
+                        >
+                            {pinnedPage ? <Lock className="w-3.5 h-3.5" strokeWidth={2} /> : <Unlock className="w-3.5 h-3.5" strokeWidth={2} />}
+                            <span>{pinnedPage ? '페이지 고정됨' : '페이지 고정'}</span>
+                        </button>
+                        {pinnedPage && (
+                            <div className="flex items-stretch bg-black/40">
+                                <button
+                                    onClick={() => setPinnedPage(p => Math.max(1, p - 1))}
+                                    disabled={pinnedPage <= 1}
+                                    className="press px-2 text-zinc-300 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 transition-colors"
+                                    title="이전 페이지"
+                                >
+                                    <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                </button>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={pdfDoc?.numPages || 1}
+                                    value={pinnedPage}
+                                    onChange={(e) => {
+                                        const n = parseInt(e.target.value, 10);
+                                        if (Number.isFinite(n)) {
+                                            setPinnedPage(Math.max(1, Math.min(pdfDoc?.numPages || 1, n)));
+                                        }
+                                    }}
+                                    onFocus={(e) => e.target.select()}
+                                    className="numeral w-[56px] bg-transparent text-center text-[12.5px] text-amber-300 font-semibold outline-none"
+                                />
+                                <span className="numeral flex items-center pr-2 text-[11.5px] text-zinc-500">
+                                    / {pdfDoc?.numPages || '?'}
+                                </span>
+                                <button
+                                    onClick={() => setPinnedPage(p => Math.min(pdfDoc?.numPages || p, p + 1))}
+                                    disabled={pinnedPage >= (pdfDoc?.numPages || 1)}
+                                    className="press px-2 text-zinc-300 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 transition-colors"
+                                    title="다음 페이지"
+                                >
+                                    <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <button
+                        onClick={handleRotate}
+                        className="press flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 px-3.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
+                    >
+                        <RotateCw className="w-3.5 h-3.5" strokeWidth={2} />
+                        <span>회전 <span className="numeral text-amber-300">{rotation}°</span></span>
+                    </button>
+                </div>
             </div>
 
             {isProcessing && (
@@ -417,7 +539,7 @@ export default function PdfViewer({ file, zoomScale }) {
             )}
 
             {/* Progressive Page Rendering */}
-            {pages.map((pageNum) => (
+            {visiblePages.map((pageNum) => (
                 <PdfPage
                     key={`${pageNum}-${rotation}`}
                     pdfDoc={pdfDoc}
@@ -427,6 +549,7 @@ export default function PdfViewer({ file, zoomScale }) {
                     onGlobalCrop={processGlobalCrop}
                     renderScale={RENDER_SCALE}
                     numPages={pdfDoc?.numPages || 0}
+                    baseSize={pageSizes[pageNum]}
                 />
             ))}
         </div>

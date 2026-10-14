@@ -796,7 +796,8 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 );
             })}
 
-            {/* Currently Drawing Rect */}
+            {/* Currently Drawing Rect — 지금 몇 쪽을 자르고 있는지 끌고 있는 자리에 붙여준다.
+                여러 장을 오갈 때 "내가 지금 몇 쪽이지?"를 사이드바까지 안 가도 알 수 있다. */}
             {currentRect && (
                 <div
                     className="absolute border-2 border-blue-400 bg-blue-400/20 pointer-events-none"
@@ -806,7 +807,11 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         width: `${currentRect.width}px`,
                         height: `${currentRect.height}px`
                     }}
-                />
+                >
+                    <span className="numeral absolute -top-[22px] left-0 whitespace-nowrap px-1.5 py-0.5 rounded bg-blue-500 text-white text-[11px] font-semibold shadow-md">
+                        P.{pageNum}{numPages ? ` / ${numPages}` : ''}
+                    </span>
+                </div>
             )}
         </div>
     );
