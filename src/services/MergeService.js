@@ -182,15 +182,53 @@ export class MergeService {
         }
     }
 
+    /**
+     * 클립보드에 이미지를 쓴다.
+     *
+     * 🔴 navigator.clipboard.write 는 탭이 백그라운드면 거부도 하지 않고
+     * 영영 끝나지 않는다 (2026-10-14 실측: visibilityState='hidden' 에서
+     * reject 없이 무응답). 그냥 await 하면 호출부의 finally 가 실행되지 않아
+     * '병합 중' 버튼이 영구히 멈춘다 — 병합을 걸어두고 클래스인 창으로
+     * 넘어가면 바로 이 상태가 됐다. 그래서 반드시 타임아웃을 건다.
+     *
+     * @returns {Promise<{ok: boolean, reason?: 'timeout'|'error'}>}
+     */
+    static CLIPBOARD_TIMEOUT_MS = 10000;
+
     static async copyToClipboard(dataUrl) {
+        let timer = null;
         try {
             const blob = await (await fetch(dataUrl)).blob();
             const item = new ClipboardItem({ 'image/png': blob });
-            await navigator.clipboard.write([item]);
-            return true;
+
+            const timeout = new Promise((resolve) => {
+                timer = setTimeout(
+                    () => resolve({ ok: false, reason: 'timeout' }),
+                    MergeService.CLIPBOARD_TIMEOUT_MS
+                );
+            });
+            // write 가 끝나지 않아도 race 는 끝난다. 버려진 promise 는 그대로 둔다 —
+            // 되돌릴 방법이 없고, 나중에 늦게 끝나도 해가 없다.
+            const result = await Promise.race([
+                navigator.clipboard.write([item]).then(() => ({ ok: true })),
+                timeout,
+            ]);
+            if (!result.ok) {
+                console.warn('[clipboard] 쓰기가 끝나지 않아 중단했습니다 (visibility=' + document.visibilityState + ')');
+            }
+            return result;
         } catch (err) {
-            console.error("Clipboard write failed", err);
-            return false;
+            console.error('Clipboard write failed', err);
+            return { ok: false, reason: 'error' };
+        } finally {
+            if (timer) clearTimeout(timer);
         }
+    }
+
+    /** 복사 실패를 사람이 읽을 문장으로. 탭을 벗어난 경우를 콕 집어 말한다. */
+    static copyFailMessage(reason, what = '복사') {
+        return reason === 'timeout'
+            ? `${what}가 끝나지 않아 중단했습니다. 복사하는 동안 이 탭을 벗어나면 브라우저가 클립보드를 막습니다 — 창을 켜둔 채로 다시 눌러주세요.`
+            : `${what}에 실패했습니다. 브라우저의 클립보드 권한을 확인해주세요.`;
     }
 }

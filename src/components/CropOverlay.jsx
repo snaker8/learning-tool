@@ -389,12 +389,12 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 if (clicked?.imageUrl) {
                     try {
                         const toCopy = await MergeService.resizeForCopy(clicked.imageUrl, settings);
-                        const ok = await MergeService.copyToClipboard(toCopy);
+                        const { ok, reason } = await MergeService.copyToClipboard(toCopy);
                         MergeService.releaseTemp(toCopy, clicked.imageUrl);
                         if (ok) {
                             markCopied(clicked.id);
                         } else {
-                            toast.error('클립보드 복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해주세요.');
+                            toast.error(MergeService.copyFailMessage(reason, '클립보드 복사'));
                         }
                     } catch (err) {
                         console.error('Auto-copy on click failed', err);

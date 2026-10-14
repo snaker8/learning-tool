@@ -42,12 +42,12 @@ export default function Sidebar() {
         if (!crop.imageUrl) return;
         try {
             const toCopy = await MergeService.resizeForCopy(crop.imageUrl, settings);
-            const success = await MergeService.copyToClipboard(toCopy);
+            const { ok, reason } = await MergeService.copyToClipboard(toCopy);
             MergeService.releaseTemp(toCopy, crop.imageUrl);
-            if (success) {
+            if (ok) {
                 markCopied(crop.id);
             } else {
-                toast.error('클립보드 복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해주세요.');
+                toast.error(MergeService.copyFailMessage(reason, '클립보드 복사'));
             }
         } catch (err) {
             console.error("Quick copy failed:", err);
@@ -80,10 +80,10 @@ export default function Sidebar() {
             // 경고에서 취소한 경우 — 실패가 아니므로 조용히 끝낸다.
             if (!result) return;
 
-            const success = await MergeService.copyToClipboard(result.dataUrl);
+            const { ok, reason } = await MergeService.copyToClipboard(result.dataUrl);
             MergeService.releaseTemp(result.dataUrl, null);
 
-            if (success) {
+            if (ok) {
                 setMergeStatus('success');
                 setTimeout(() => setMergeStatus(null), 2000);
                 // 설정값이 원본보다 작아 화질을 버린 경우 — 사용자가 직접 정한 값이라 한 번만 짚는다.
@@ -95,7 +95,7 @@ export default function Sidebar() {
                 }
             } else {
                 setMergeStatus('error');
-                toast.error('이미지 병합 복사에 실패했습니다. 클립보드 권한을 확인해주세요.');
+                toast.error(MergeService.copyFailMessage(reason, '병합 이미지 복사'));
             }
         } catch (error) {
             console.error("Merge and copy failed:", error);
@@ -123,12 +123,12 @@ export default function Sidebar() {
         if (crop?.imageUrl) {
             try {
                 const toCopy = await MergeService.resizeForCopy(crop.imageUrl, settings);
-                const success = await MergeService.copyToClipboard(toCopy);
+                const { ok, reason } = await MergeService.copyToClipboard(toCopy);
                 MergeService.releaseTemp(toCopy, crop.imageUrl);
-                if (success) {
+                if (ok) {
                     markCopied(crop.id);
                 } else {
-                    toast.error('연속 복사 중 클립보드 접근에 실패했습니다.');
+                    toast.error(MergeService.copyFailMessage(reason, '연속 복사'));
                     handleStopSequentialCopy();
                 }
             } catch (err) {
