@@ -6,7 +6,7 @@ import { MergeService } from '../services/MergeService';
 import { useToast } from '../context/ToastContext';
 import { Sparkles, Check, RefreshCw, Layers } from 'lucide-react';
 
-const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop }) {
+const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScale = 1.5, width, height, canvas, onGlobalCrop, numPages = 0 }) {
     const toast = useToast();
     const { crops, addCrop, updateCrop, removeCrop, selectedCropId, setSelectedCropId, settings, copiedCropId, markCopied, detections, setPageDetections, updateSettings } = useCropContext();
     const [isDrawing, setIsDrawing] = useState(false);
@@ -19,6 +19,20 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
     const [activeCropOverride, setActiveCropOverride] = useState(null);
     const [isDetecting, setIsDetecting] = useState(false);
     const [showCandidates, setShowCandidates] = useState(true);
+
+    /* 구간 인식 — 100페이지 교재에서 필요한 단원만 돌리기 위한 것.
+       기본값은 '이 페이지부터 끝까지'. 페이지당 약 ₩6 이라 장수를 바로 보여준다. */
+    const [rangeOpen, setRangeOpen] = useState(false);
+    const [rangeFrom, setRangeFrom] = useState(String(pageNum));
+    const [rangeTo, setRangeTo] = useState(String(numPages || pageNum));
+    const clampPage = (v, fallback) => {
+        const n = parseInt(v, 10);
+        if (!Number.isFinite(n)) return fallback;
+        return Math.max(1, Math.min(numPages || n, n));
+    };
+    const rFrom = clampPage(rangeFrom, pageNum);
+    const rTo = Math.max(rFrom, clampPage(rangeTo, numPages || pageNum));
+    const rangeCount = rTo - rFrom + 1;
 
     const pageDetections = detections[pageNum] || null;
 
@@ -544,13 +558,24 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                             이 페이지
                         </button>
                         {onGlobalCrop && (
-                            <button
-                                onClick={() => onGlobalCrop(null, pageNum)}
-                                className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[11.5px] font-medium transition-colors border-l border-white/15"
-                                title="모든 페이지의 문제를 찾아 전부 담습니다 (페이지당 약 ₩6)"
-                            >
-                                전체 페이지
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => onGlobalCrop(null)}
+                                    className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[11.5px] font-medium transition-colors border-l border-white/15"
+                                    title="모든 페이지의 문제를 찾아 전부 담습니다 (페이지당 약 ₩6)"
+                                >
+                                    전체 페이지
+                                </button>
+                                <button
+                                    onClick={() => setRangeOpen(v => !v)}
+                                    className={`press px-2.5 py-1.5 text-[11.5px] font-medium transition-colors border-l border-white/15 ${
+                                        rangeOpen ? 'bg-violet-500 text-white' : 'bg-black/70 hover:bg-violet-500 text-white'
+                                    }`}
+                                    title="필요한 페이지 구간만 인식합니다 (페이지당 약 ₩6)"
+                                >
+                                    구간 지정
+                                </button>
+                            </>
                         )}
                     </div>
                 ) : (
@@ -606,6 +631,67 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     ))}
                 </div>
             </div>
+
+            {/* 구간 지정 패널 — 몇 장이고 얼마인지 누르기 전에 보이게 둔다 */}
+            {rangeOpen && onGlobalCrop && (
+                <div
+                    className="absolute top-12 left-2 z-50 w-[272px] rounded-lg border border-white/15 bg-zinc-950/90 backdrop-blur-md shadow-xl p-3"
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    <div className="text-[11.5px] font-semibold text-zinc-100 mb-2">인식할 페이지 구간</div>
+                    <div className="flex items-center gap-1.5">
+                        <input
+                            type="number" min={1} max={numPages || undefined}
+                            value={rangeFrom}
+                            onChange={(e) => setRangeFrom(e.target.value)}
+                            className="numeral w-[72px] px-2 py-1.5 rounded-md bg-black/60 border border-white/15 text-white text-[12px] text-center outline-none focus:border-violet-400"
+                        />
+                        <span className="text-zinc-400 text-[12px]">–</span>
+                        <input
+                            type="number" min={1} max={numPages || undefined}
+                            value={rangeTo}
+                            onChange={(e) => setRangeTo(e.target.value)}
+                            className="numeral w-[72px] px-2 py-1.5 rounded-md bg-black/60 border border-white/15 text-white text-[12px] text-center outline-none focus:border-violet-400"
+                        />
+                        <span className="text-zinc-400 text-[11.5px]">
+                            / 전체 <span className="numeral text-zinc-200">{numPages || '?'}</span>쪽
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2">
+                        {[
+                            { label: '이 페이지부터 끝까지', f: pageNum, t: numPages || pageNum },
+                            { label: '이 페이지만', f: pageNum, t: pageNum },
+                            { label: '전체', f: 1, t: numPages || pageNum },
+                        ].map(({ label, f, t }) => (
+                            <button
+                                key={label}
+                                onClick={() => { setRangeFrom(String(f)); setRangeTo(String(t)); }}
+                                className="press px-2 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 text-[10.5px] font-medium transition-colors"
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="text-[11px] text-zinc-400 mt-2.5">
+                        <span className="numeral text-amber-300">{rangeCount}</span>장 · 예상 비용 약{' '}
+                        <span className="numeral text-amber-300">₩{(rangeCount * 6).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-2.5">
+                        <button
+                            onClick={() => { setRangeOpen(false); onGlobalCrop(null, { from: rFrom, to: rTo }); }}
+                            className="press flex-1 px-2.5 py-1.5 rounded-md bg-violet-500 hover:bg-violet-400 text-white text-[11.5px] font-semibold transition-colors"
+                        >
+                            {rFrom}–{rTo} 인식
+                        </button>
+                        <button
+                            onClick={() => setRangeOpen(false)}
+                            className="press px-2.5 py-1.5 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 text-[11.5px] font-medium transition-colors"
+                        >
+                            닫기
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* 검출 후보 — 클릭하면 담긴다 */}
             {actualScale !== null && showCandidates && pageDetections && canvas && pageDetections.map((cand, i) => {

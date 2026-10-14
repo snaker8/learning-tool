@@ -234,6 +234,7 @@ export default function Sidebar() {
                             문제 인식은 <span className="text-violet-300 font-medium">시험지 왼쪽 위 버튼</span>에서 합니다.
                             <br />· <span className="text-zinc-300">이 페이지 인식</span> — 문제를 찾아 후보로 띄우고, 이후 드래그가 문제 경계에 딱 맞춰집니다
                             <br />· <span className="text-zinc-300">전체 페이지</span> — 모든 페이지의 문제를 찾아 전부 담습니다
+                            <br />· <span className="text-zinc-300">구간 지정</span> — 필요한 페이지 구간만 (예: 12–28쪽)
                             <br />드래그만 하면 그린 그대로 잘립니다 (즉시·무료).
                         </p>
 

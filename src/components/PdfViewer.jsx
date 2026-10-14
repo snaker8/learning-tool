@@ -20,7 +20,7 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 const SAFARI_ROOT_MARGIN = '200px 0px';
 const DEFAULT_ROOT_MARGIN = '400px 0px';
 
-const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotation = 0, onGlobalCrop, renderScale }) {
+const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotation = 0, onGlobalCrop, renderScale, numPages }) {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const [canvasEl, setCanvasEl] = useState(null);
@@ -171,6 +171,7 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
                     height={canvasEl.height}
                     canvas={canvasEl}
                     onGlobalCrop={onGlobalCrop}
+                    numPages={numPages}
                 />
             )}
 
@@ -253,13 +254,21 @@ export default function PdfViewer({ file, zoomScale }) {
 
     const { addCrop, crops, sortCrops } = useCropContext();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [progress, setProgress] = useState(null); // { done, total, from, to }
 
-    // rect === null 이면 ROI 없이 "모든 페이지의 모든 문제"를 검출한다.
-    // (페이지 위 '전체 페이지' 버튼이 이 경로를 쓴다 — 드래그가 필요 없다)
-    const processGlobalCrop = useCallback(async (rect) => {
+    // rect === null 이면 ROI 없이 "그 구간 모든 페이지의 모든 문제"를 검출한다.
+    // (페이지 위 '전체 페이지' / '구간 지정' 버튼이 이 경로를 쓴다 — 드래그가 필요 없다)
+    // range === null 이면 전체. { from, to } 를 주면 그 구간만 — 100페이지 교재에서
+    // 필요한 단원만 돌릴 때 나머지 페이지 값을 버리지 않게 한다.
+    const processGlobalCrop = useCallback(async (rect, range = null) => {
         if (!pdfDoc) return;
 
-        const totalPages = pdfDoc.numPages;
+        const numPages = pdfDoc.numPages;
+        const from = Math.max(1, Math.min(numPages, Math.floor(range?.from ?? 1)));
+        const to = Math.max(from, Math.min(numPages, Math.floor(range?.to ?? numPages)));
+        const pageList = Array.from({ length: to - from + 1 }, (_, i) => from + i);
+        const totalPages = pageList.length;
+        const isSubset = totalPages < numPages;
 
         // 비용 폭주 방지 — 많은 페이지에 AI 일괄 적용 시 사용자 확인.
         // 페이지당 단가(실측, 2026-10-05):
@@ -272,14 +281,16 @@ export default function PdfViewer({ file, zoomScale }) {
         const HARD_LIMIT = 300;
         const CONFIRM_THRESHOLD = 30;
         if (totalPages > HARD_LIMIT) {
-            toast.error(`${totalPages}페이지는 한 번에 처리할 수 없습니다 (한도 ${HARD_LIMIT}페이지). PDF 분할기로 나눈 뒤 다시 시도해주세요.`);
+            toast.error(`${totalPages}페이지는 한 번에 처리할 수 없습니다 (한도 ${HARD_LIMIT}페이지). 구간을 나눠서 돌리거나 PDF 분할기로 나눈 뒤 다시 시도해주세요.`);
             return;
         }
         if (totalPages > CONFIRM_THRESHOLD) {
             const estCost = totalPages * PAGE_COST_KRW;
             const estSec = Math.round((totalPages / 4) * 5);
             const ok = await toast.confirm({
-                title: `${totalPages}페이지 전체에서 문제를 찾을까요?`,
+                title: isSubset
+                    ? `${from}–${to} 페이지(${totalPages}장)에서 문제를 찾을까요?`
+                    : `${totalPages}페이지 전체에서 문제를 찾을까요?`,
                 message:
                     `예상 비용 약 ₩${estCost.toLocaleString()} (페이지당 ~₩${PAGE_COST_KRW})
 ` +
@@ -290,6 +301,7 @@ export default function PdfViewer({ file, zoomScale }) {
         }
 
         setIsProcessing(true);
+        setProgress({ done: 0, total: totalPages, from, to });
         const failedPages = [];
 
         try {
@@ -340,15 +352,16 @@ export default function PdfViewer({ file, zoomScale }) {
             // 페이지 병렬 처리 — concurrency 4 (Cloud Function maxInstances=2,
             // 각 instance가 다중 요청 처리 가능하지만 과한 fan-out 방지).
             const CONCURRENCY = 4;
-            let nextIdx = 1;
+            let nextIdx = 0;
             const runner = async () => {
-                while (nextIdx <= totalPages) {
-                    const myPage = nextIdx++;
+                while (nextIdx < pageList.length) {
+                    const myPage = pageList[nextIdx++];
                     try { await processPage(myPage); }
                     catch (e) {
                         console.error(`page ${myPage} failed`, e);
                         failedPages.push(myPage);
                     }
+                    setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
                 }
             };
             await Promise.all(
@@ -368,6 +381,7 @@ export default function PdfViewer({ file, zoomScale }) {
             console.error("Global processing error", e);
         } finally {
             setIsProcessing(false);
+            setProgress(null);
         }
     }, [pdfDoc, rotation, RENDER_SCALE, addCrop, sortCrops, toast]);
 
@@ -391,8 +405,14 @@ export default function PdfViewer({ file, zoomScale }) {
             {isProcessing && (
                 <div className="fixed inset-0 z-[300] bg-black/70 flex flex-col items-center justify-center text-white backdrop-blur-md">
                     <div className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-700 border-t-amber-400 mb-4"></div>
-                    <div className="text-[15px] font-semibold tracking-tight">전체 페이지 처리 중</div>
-                    <div className="text-[12px] text-zinc-400 mt-1">잠시만 기다려주세요</div>
+                    <div className="text-[15px] font-semibold tracking-tight">
+                        {progress && progress.total < (pdfDoc?.numPages || 0)
+                            ? `${progress.from}–${progress.to} 페이지 처리 중`
+                            : '전체 페이지 처리 중'}
+                    </div>
+                    <div className="text-[12px] text-zinc-400 mt-1 numeral">
+                        {progress ? `${progress.done} / ${progress.total} 페이지` : '잠시만 기다려주세요'}
+                    </div>
                 </div>
             )}
 
@@ -406,6 +426,7 @@ export default function PdfViewer({ file, zoomScale }) {
                     rotation={rotation}
                     onGlobalCrop={processGlobalCrop}
                     renderScale={RENDER_SCALE}
+                    numPages={pdfDoc?.numPages || 0}
                 />
             ))}
         </div>
