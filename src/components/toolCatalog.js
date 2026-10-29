@@ -20,11 +20,11 @@ export const TOOLS = [
   },
   {
     id: 'splitter',
-    label: 'PDF 분할기',
+    label: 'PDF 분할 · 합치기',
     Icon: Split,
     tag: '무료',
-    summary: 'PDF에서 필요한 페이지만 골라 새 파일로 나눕니다',
-    steps: ['PDF 열기', '페이지 선택', '분할 저장'],
+    summary: '페이지를 골라 낱장으로 나누거나, 여러 PDF를 하나로 합칩니다',
+    steps: ['PDF 여러 개 열기', '페이지 선택', '합치기 / 분할'],
     accepts: 'PDF',
   },
   {

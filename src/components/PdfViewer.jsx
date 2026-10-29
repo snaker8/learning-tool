@@ -345,7 +345,7 @@ export default function PdfViewer({ file, zoomScale }) {
         const HARD_LIMIT = 300;
         const CONFIRM_THRESHOLD = 30;
         if (totalPages > HARD_LIMIT) {
-            toast.error(`${totalPages}페이지는 한 번에 처리할 수 없습니다 (한도 ${HARD_LIMIT}페이지). 구간을 나눠서 돌리거나 PDF 분할기로 나눈 뒤 다시 시도해주세요.`);
+            toast.error(`${totalPages}페이지는 한 번에 처리할 수 없습니다 (한도 ${HARD_LIMIT}페이지). 구간을 나눠서 돌리거나 PDF 분할 · 합치기로 나눈 뒤 다시 시도해주세요.`);
             return;
         }
         if (totalPages > CONFIRM_THRESHOLD) {
