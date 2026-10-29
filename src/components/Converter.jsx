@@ -24,8 +24,8 @@ export default function Converter() {
                             <button
                                 key={id}
                                 onClick={() => setMode(id)}
-                                className={`relative press flex items-center gap-2.5 px-4 py-2 rounded-lg text-[12.5px] font-medium transition-colors ${
-                                    isActive ? 'text-amber-200' : 'text-zinc-400 hover:text-zinc-100'
+                                className={`relative press flex items-center gap-2.5 px-4 py-2 rounded-lg text-[14px] font-medium transition-colors ${
+                                    isActive ? 'text-amber-200' : 'text-zinc-300 hover:text-zinc-100'
                                 }`}
                             >
                                 {isActive && (

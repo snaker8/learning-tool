@@ -161,11 +161,11 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
             className="relative group shadow-2xl rounded-lg overflow-hidden transition-transform duration-300 bg-white w-full max-w-[800px] flex flex-col items-center justify-center"
         >
             {!shouldMount ? (
-                <div className="text-zinc-400 text-sm mono">Page {pageNum} 대기 중…</div>
+                <div className="text-zinc-300 text-sm mono">Page {pageNum} 대기 중…</div>
             ) : !isRendered ? (
                 <div className="flex flex-col items-center justify-center gap-4">
                     <div className="w-10 h-10 rounded-full border-2 border-zinc-200 border-t-amber-400 animate-spin"></div>
-                    <div className="text-zinc-500 font-medium mono text-[12px]">Loading Page {pageNum}…</div>
+                    <div className="text-zinc-400 font-medium mono text-[13.5px]">Loading Page {pageNum}…</div>
                 </div>
             ) : null}
             <canvas
@@ -197,7 +197,7 @@ const PdfPage = React.memo(function PdfPage({ pdfDoc, pageNum, zoomScale, rotati
                     <Scan className="w-3.5 h-3.5" strokeWidth={1.75} />
                 </button>
                 {/* 쪽 번호는 항상 보인다 — 마우스를 올려야만 보이면 작업 중에 길을 잃는다 */}
-                <div className="numeral bg-black/55 text-white text-[11px] px-2 py-1 rounded-md backdrop-blur-md border border-white/10 font-medium">
+                <div className="numeral bg-black/55 text-white text-[12.5px] px-2 py-1 rounded-md backdrop-blur-md border border-white/10 font-medium">
                     P. {pageNum}{numPages ? ` / ${numPages}` : ''}
                 </div>
             </div>
@@ -457,7 +457,7 @@ export default function PdfViewer({ file, zoomScale }) {
             <div className="glass-strong flex items-center justify-between px-5 py-3 rounded-xl w-full">
                 <div className="flex items-center gap-3">
                     <span className="section-num">PREVIEW</span>
-                    <div className="text-zinc-100 font-semibold text-[14px] tracking-tight">PDF</div>
+                    <div className="text-zinc-100 font-semibold text-[15px] tracking-tight">PDF</div>
                 </div>
                 <div className="flex items-center gap-2">
                     {/* 작업 페이지 고정 — 한 장만 띄워 스크롤 자체를 없앤다 */}
@@ -466,7 +466,7 @@ export default function PdfViewer({ file, zoomScale }) {
                     }`}>
                         <button
                             onClick={togglePin}
-                            className={`press flex items-center gap-2 px-3 py-1.5 text-[12.5px] font-medium transition-colors ${
+                            className={`press flex items-center gap-2 px-3 py-1.5 text-[14px] font-medium transition-colors ${
                                 pinnedPage
                                     ? 'bg-amber-400 text-zinc-950 font-semibold'
                                     : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200'
@@ -483,7 +483,7 @@ export default function PdfViewer({ file, zoomScale }) {
                                 <button
                                     onClick={() => setPinnedPage(p => Math.max(1, p - 1))}
                                     disabled={pinnedPage <= 1}
-                                    className="press px-2 text-zinc-300 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 transition-colors"
+                                    className="press px-2 text-zinc-200 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 transition-colors"
                                     title="이전 페이지"
                                 >
                                     <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -500,15 +500,15 @@ export default function PdfViewer({ file, zoomScale }) {
                                         }
                                     }}
                                     onFocus={(e) => e.target.select()}
-                                    className="numeral w-[56px] bg-transparent text-center text-[12.5px] text-amber-300 font-semibold outline-none"
+                                    className="numeral w-[56px] bg-transparent text-center text-[14px] text-amber-300 font-semibold outline-none"
                                 />
-                                <span className="numeral flex items-center pr-2 text-[11.5px] text-zinc-500">
+                                <span className="numeral flex items-center pr-2 text-[13px] text-zinc-400">
                                     / {pdfDoc?.numPages || '?'}
                                 </span>
                                 <button
                                     onClick={() => setPinnedPage(p => Math.min(pdfDoc?.numPages || p, p + 1))}
                                     disabled={pinnedPage >= (pdfDoc?.numPages || 1)}
-                                    className="press px-2 text-zinc-300 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 transition-colors"
+                                    className="press px-2 text-zinc-200 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 transition-colors"
                                     title="다음 페이지"
                                 >
                                     <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -518,7 +518,7 @@ export default function PdfViewer({ file, zoomScale }) {
                     </div>
                     <button
                         onClick={handleRotate}
-                        className="press flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 px-3.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors"
+                        className="press flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 px-3.5 py-1.5 rounded-lg text-[14px] font-medium transition-colors"
                     >
                         <RotateCw className="w-3.5 h-3.5" strokeWidth={2} />
                         <span>회전 <span className="numeral text-amber-300">{rotation}°</span></span>
@@ -529,12 +529,12 @@ export default function PdfViewer({ file, zoomScale }) {
             {isProcessing && (
                 <div className="fixed inset-0 z-[300] bg-black/70 flex flex-col items-center justify-center text-white backdrop-blur-md">
                     <div className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-700 border-t-amber-400 mb-4"></div>
-                    <div className="text-[15px] font-semibold tracking-tight">
+                    <div className="text-[16px] font-semibold tracking-tight">
                         {progress && progress.total < (pdfDoc?.numPages || 0)
                             ? `${progress.from}–${progress.to} 페이지 처리 중`
                             : '전체 페이지 처리 중'}
                     </div>
-                    <div className="text-[12px] text-zinc-400 mt-1 numeral">
+                    <div className="text-[13.5px] text-zinc-300 mt-1 numeral">
                         {progress ? `${progress.done} / ${progress.total} 페이지` : '잠시만 기다려주세요'}
                     </div>
                 </div>

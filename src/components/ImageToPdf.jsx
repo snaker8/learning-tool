@@ -161,7 +161,7 @@ export default function ImageToPdf() {
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               className="flex items-center gap-3 p-4 bg-red-500/[0.08] border border-red-500/25 text-red-300 rounded-xl">
               <AlertCircle className="w-4 h-4 flex-shrink-0" strokeWidth={2} />
-              <p className="text-[13px]">{error}</p>
+              <p className="text-[14.5px]">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -175,9 +175,9 @@ export default function ImageToPdf() {
                 <div className="flex items-center gap-2.5">
                   <span className="section-num">01</span>
                   <Upload className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
-                  <h2 className="text-[12.5px] font-semibold text-zinc-200 tracking-tight">이미지 업로드</h2>
+                  <h2 className="text-[14px] font-semibold text-zinc-200 tracking-tight">이미지 업로드</h2>
                   {items.length > 0 && (
-                    <span className="numeral text-[11px] px-1.5 py-px rounded bg-amber-400/10 border border-amber-400/25 text-amber-300 ml-1">
+                    <span className="numeral text-[12.5px] px-1.5 py-px rounded bg-amber-400/10 border border-amber-400/25 text-amber-300 ml-1">
                       {items.length}장
                     </span>
                   )}
@@ -186,14 +186,14 @@ export default function ImageToPdf() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="press flex items-center gap-1.5 text-[11.5px] font-medium px-2.5 py-1.5 rounded-md text-zinc-300 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 transition-colors"
+                      className="press flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-1.5 rounded-md text-zinc-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 transition-colors"
                     >
                       <Plus className="w-3 h-3" strokeWidth={2.25} />
                       추가
                     </button>
                     <button
                       onClick={clearAll}
-                      className="press flex items-center gap-1.5 text-[11.5px] font-medium px-2.5 py-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors"
+                      className="press flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-1.5 rounded-md text-zinc-400 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors"
                     >
                       <Trash2 className="w-3 h-3" strokeWidth={2} />
                       모두 삭제
@@ -212,12 +212,12 @@ export default function ImageToPdf() {
                         ? 'border-amber-400/50 bg-amber-400/[0.04]'
                         : 'border-white/[0.10] hover:border-amber-400/30 hover:bg-amber-400/[0.02]'}`}
                   >
-                    <div className="w-14 h-14 mb-4 rounded-2xl glass flex items-center justify-center text-zinc-300">
+                    <div className="w-14 h-14 mb-4 rounded-2xl glass flex items-center justify-center text-zinc-200">
                       <ImageIcon className="w-6 h-6" strokeWidth={1.5} />
                     </div>
-                    <p className="text-[15px] font-semibold text-zinc-100 mb-1 tracking-tight">이미지를 드래그하거나 클릭</p>
-                    <p className="text-[12px] text-zinc-500">여러 장 동시 선택 가능 · 드래그로 순서 변경</p>
-                    <p className="numeral text-[11px] text-zinc-600 mt-3">JPEG · PNG · WebP</p>
+                    <p className="text-[16px] font-semibold text-zinc-100 mb-1 tracking-tight">이미지를 드래그하거나 클릭</p>
+                    <p className="text-[13.5px] text-zinc-400">여러 장 동시 선택 가능 · 드래그로 순서 변경</p>
+                    <p className="numeral text-[12.5px] text-zinc-400 mt-3">JPEG · PNG · WebP</p>
                     <input
                       type="file"
                       accept="image/*"
@@ -244,8 +244,8 @@ export default function ImageToPdf() {
                           whileDrag={{ scale: 1.01, zIndex: 50 }}
                         >
                           <div className="flex items-center gap-3 bg-white/[0.025] border border-white/[0.06] hover:border-amber-400/30 rounded-xl p-2.5 transition-colors group">
-                            <GripVertical className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 shrink-0" strokeWidth={1.75} />
-                            <span className="numeral text-[11px] w-7 text-center text-zinc-500 shrink-0">
+                            <GripVertical className="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 shrink-0" strokeWidth={1.75} />
+                            <span className="numeral text-[12.5px] w-7 text-center text-zinc-400 shrink-0">
                               {String(idx + 1).padStart(2, '0')}
                             </span>
                             <div className="w-12 h-12 rounded-md bg-black/40 border border-white/[0.05] overflow-hidden shrink-0 flex items-center justify-center">
@@ -257,16 +257,16 @@ export default function ImageToPdf() {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[12.5px] font-medium text-zinc-100 truncate tracking-tight">
+                              <p className="text-[14px] font-medium text-zinc-100 truncate tracking-tight">
                                 {it.file.name}
                               </p>
-                              <p className="numeral text-[10.5px] text-zinc-500">
+                              <p className="numeral text-[12px] text-zinc-400">
                                 {(it.file.size / 1024).toFixed(1)} KB
                               </p>
                             </div>
                             <button
                               onClick={(e) => { e.stopPropagation(); removeItem(it.id); }}
-                              className="press shrink-0 p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/[0.08] rounded-md transition-colors"
+                              className="press shrink-0 p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/[0.08] rounded-md transition-colors"
                               title="삭제"
                             >
                               <X className="w-3.5 h-3.5" strokeWidth={2} />
@@ -280,10 +280,10 @@ export default function ImageToPdf() {
                     <div
                       onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
-                      className={`mt-3 py-3 flex items-center justify-center gap-2 border border-dashed rounded-xl cursor-pointer text-[12px] transition-colors
+                      className={`mt-3 py-3 flex items-center justify-center gap-2 border border-dashed rounded-xl cursor-pointer text-[13.5px] transition-colors
                         ${isDragOver
                           ? 'border-amber-400/50 text-amber-200 bg-amber-400/[0.04]'
-                          : 'border-white/[0.08] text-zinc-500 hover:border-amber-400/25 hover:text-amber-300'}`}
+                          : 'border-white/[0.08] text-zinc-400 hover:border-amber-400/25 hover:text-amber-300'}`}
                     >
                       <Plus className="w-3.5 h-3.5" strokeWidth={2} />
                       이미지 더 추가
@@ -308,7 +308,7 @@ export default function ImageToPdf() {
               <div className="px-5 py-3.5 border-b border-white/[0.05] bg-white/[0.015] flex items-center gap-2.5">
                 <span className="section-num">02</span>
                 <FileText className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
-                <h2 className="text-[12.5px] font-semibold text-zinc-200 tracking-tight">PDF 출력 설정</h2>
+                <h2 className="text-[14px] font-semibold text-zinc-200 tracking-tight">PDF 출력 설정</h2>
               </div>
 
               <div className="p-5 space-y-6 flex-1">
@@ -318,13 +318,13 @@ export default function ImageToPdf() {
                   <div className="space-y-1.5">
                     {PAGE_SIZE_OPTIONS.map(opt => (
                       <button key={opt.value} onClick={() => setPageSize(opt.value)}
-                        className={`press w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[12.5px] transition-colors ${
+                        className={`press w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[14px] transition-colors ${
                           pageSize === opt.value
                             ? 'bg-amber-400/[0.06] border-amber-400/30 text-amber-200'
-                            : 'bg-white/[0.02] border-white/[0.06] text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
+                            : 'bg-white/[0.02] border-white/[0.06] text-zinc-300 hover:bg-white/[0.04] hover:text-zinc-200'
                         }`}>
                         <span className="font-medium">{opt.label}</span>
-                        <span className="numeral text-[10.5px] opacity-70">{opt.sub}</span>
+                        <span className="numeral text-[12px] opacity-70">{opt.sub}</span>
                       </button>
                     ))}
                   </div>
@@ -337,10 +337,10 @@ export default function ImageToPdf() {
                     <div className="grid grid-cols-3 gap-2">
                       {ORIENTATION_OPTIONS.map(opt => (
                         <button key={opt.value} onClick={() => setOrientation(opt.value)}
-                          className={`press py-2 rounded-lg border text-[12px] font-medium transition-colors ${
+                          className={`press py-2 rounded-lg border text-[13.5px] font-medium transition-colors ${
                             orientation === opt.value
                               ? 'bg-amber-400 text-zinc-950 border-amber-400'
-                              : 'bg-white/[0.03] text-zinc-400 border-white/[0.06] hover:bg-white/[0.06] hover:text-zinc-100'
+                              : 'bg-white/[0.03] text-zinc-300 border-white/[0.06] hover:bg-white/[0.06] hover:text-zinc-100'
                           }`}>
                           {opt.label}
                         </button>
@@ -355,16 +355,16 @@ export default function ImageToPdf() {
                   <div className="grid grid-cols-3 gap-2">
                     {MARGIN_OPTIONS.map(opt => (
                       <button key={opt.value} onClick={() => setMargin(opt.value)}
-                        className={`press py-2 rounded-lg border text-[12px] font-medium transition-colors ${
+                        className={`press py-2 rounded-lg border text-[13.5px] font-medium transition-colors ${
                           margin === opt.value
                             ? 'bg-amber-400 text-zinc-950 border-amber-400'
-                            : 'bg-white/[0.03] text-zinc-400 border-white/[0.06] hover:bg-white/[0.06] hover:text-zinc-100'
+                            : 'bg-white/[0.03] text-zinc-300 border-white/[0.06] hover:bg-white/[0.06] hover:text-zinc-100'
                         }`}>
                         {opt.label}
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">
+                  <p className="text-[12.5px] text-zinc-400 leading-relaxed">
                     이미지가 여백 안에 비율 유지하며 중앙 정렬됩니다.
                   </p>
                 </div>
@@ -376,7 +376,7 @@ export default function ImageToPdf() {
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-center gap-2 text-zinc-200 font-medium">
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" strokeWidth={2.25} />
-                      <span className="text-[13px]">생성 중</span>
+                      <span className="text-[14.5px]">생성 중</span>
                       <span className="numeral text-amber-300">{progress}%</span>
                     </div>
                     <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
@@ -387,7 +387,7 @@ export default function ImageToPdf() {
                   <button
                     onClick={handleConvert}
                     disabled={items.length === 0}
-                    className="premium-btn-primary press w-full py-2.5 px-4 text-[13px] flex items-center justify-center gap-2"
+                    className="premium-btn-primary press w-full py-2.5 px-4 text-[14.5px] flex items-center justify-center gap-2"
                   >
                     {status === 'done' ? (
                       <>
@@ -403,7 +403,7 @@ export default function ImageToPdf() {
                   </button>
                 )}
                 {items.length > 0 && status === 'idle' && (
-                  <p className="text-center text-[11px] text-zinc-500 mt-2">
+                  <p className="text-center text-[12.5px] text-zinc-400 mt-2">
                     하나의 PDF 파일로 다운로드됩니다
                   </p>
                 )}

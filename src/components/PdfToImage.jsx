@@ -127,7 +127,7 @@ export default function PdfToImage() {
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               className="flex items-center gap-3 p-4 bg-red-500/[0.08] border border-red-500/25 text-red-300 rounded-xl">
               <AlertCircle className="w-4 h-4 flex-shrink-0" strokeWidth={2} />
-              <p className="text-[13px]">{error}</p>
+              <p className="text-[14.5px]">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -140,7 +140,7 @@ export default function PdfToImage() {
               <div className="px-5 py-3.5 border-b border-white/[0.05] bg-white/[0.015] flex items-center gap-2.5">
                 <span className="section-num">01</span>
                 <Upload className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
-                <h2 className="text-[12.5px] font-semibold text-zinc-200 tracking-tight">PDF 파일 업로드</h2>
+                <h2 className="text-[14px] font-semibold text-zinc-200 tracking-tight">PDF 파일 업로드</h2>
               </div>
               <div className="p-6 flex flex-col">
                 {!file ? (
@@ -153,31 +153,31 @@ export default function PdfToImage() {
                         ? 'border-amber-400/50 bg-amber-400/[0.04]'
                         : 'border-white/[0.10] hover:border-amber-400/30 hover:bg-amber-400/[0.02]'}`}
                   >
-                    <div className="w-14 h-14 mb-4 rounded-2xl glass flex items-center justify-center text-zinc-300">
+                    <div className="w-14 h-14 mb-4 rounded-2xl glass flex items-center justify-center text-zinc-200">
                       <Upload className="w-6 h-6" strokeWidth={1.5} />
                     </div>
-                    <p className="text-[15px] font-semibold text-zinc-100 mb-1 tracking-tight">클릭하거나 파일을 드래그하세요</p>
-                    <p className="text-[12px] text-zinc-500">지원 형식 <span className="mono ml-1">.pdf</span></p>
+                    <p className="text-[16px] font-semibold text-zinc-100 mb-1 tracking-tight">클릭하거나 파일을 드래그하세요</p>
+                    <p className="text-[13.5px] text-zinc-400">지원 형식 <span className="mono ml-1">.pdf</span></p>
                     <input type="file" accept=".pdf" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                   </div>
                 ) : (
                   /* File Info */
                   <div className="flex-1 flex flex-col items-center justify-center min-h-[280px] bg-white/[0.02] rounded-2xl border border-white/[0.05] p-8">
                     <div className="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-4">
-                      <FileText className="w-7 h-7 text-zinc-300" strokeWidth={1.5} />
+                      <FileText className="w-7 h-7 text-zinc-200" strokeWidth={1.5} />
                     </div>
                     <h3 className="text-[16px] font-semibold text-zinc-100 text-center break-all mb-1 tracking-tight">{file.name}</h3>
-                    <p className="numeral text-[12px] text-zinc-500 mb-8">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="numeral text-[13.5px] text-zinc-400 mb-8">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
 
                     {/* Idle: action buttons */}
                     {status === 'idle' && (
                       <div className="flex gap-2.5">
                         <button onClick={resetAll}
-                          className="premium-btn-secondary press px-4 py-2 text-[12.5px]">
+                          className="premium-btn-secondary press px-4 py-2 text-[14px]">
                           취소
                         </button>
                         <button onClick={handleConvert}
-                          className="premium-btn-primary press px-5 py-2 text-[12.5px] flex items-center gap-2">
+                          className="premium-btn-primary press px-5 py-2 text-[14px] flex items-center gap-2">
                           변환 시작 <Image className="w-3.5 h-3.5" strokeWidth={2.25} />
                         </button>
                       </div>
@@ -188,7 +188,7 @@ export default function PdfToImage() {
                       <div className="w-full max-w-sm space-y-3 text-center">
                         <div className="flex items-center justify-center gap-2 text-zinc-200 font-medium">
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" strokeWidth={2.25} />
-                          <span className="text-[13px]">이미지 추출 중</span>
+                          <span className="text-[14.5px]">이미지 추출 중</span>
                           <span className="numeral text-amber-300">{progress}%</span>
                         </div>
                         <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
@@ -200,7 +200,7 @@ export default function PdfToImage() {
                     {/* Done / Error: reset button */}
                     {(status === 'done' || status === 'error') && (
                       <button onClick={resetAll}
-                        className="premium-btn-secondary press flex items-center gap-2 px-4 py-2 text-[12.5px]">
+                        className="premium-btn-secondary press flex items-center gap-2 px-4 py-2 text-[14px]">
                         <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} /> 새 파일 업로드
                       </button>
                     )}
@@ -216,7 +216,7 @@ export default function PdfToImage() {
               <div className="px-5 py-3.5 border-b border-white/[0.05] bg-white/[0.015] flex items-center gap-2.5">
                 <span className="section-num">02</span>
                 <Image className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
-                <h2 className="text-[12.5px] font-semibold text-zinc-200 tracking-tight">출력 설정</h2>
+                <h2 className="text-[14px] font-semibold text-zinc-200 tracking-tight">출력 설정</h2>
               </div>
               <div className="p-5 space-y-6">
                 {/* Format */}
@@ -225,14 +225,14 @@ export default function PdfToImage() {
                   <div className="grid grid-cols-2 gap-2">
                     {['jpeg', 'png'].map(f => (
                       <button key={f} onClick={() => setFormat(f)}
-                        className={`press py-2.5 px-4 rounded-lg border text-[12.5px] font-semibold transition-colors ${format === f
+                        className={`press py-2.5 px-4 rounded-lg border text-[14px] font-semibold transition-colors ${format === f
                           ? 'bg-amber-400 text-zinc-950 border-amber-400'
-                          : 'bg-white/[0.03] text-zinc-400 border-white/[0.06] hover:bg-white/[0.06] hover:text-zinc-100 hover:border-white/10'}`}>
+                          : 'bg-white/[0.03] text-zinc-300 border-white/[0.06] hover:bg-white/[0.06] hover:text-zinc-100 hover:border-white/10'}`}>
                         {f.toUpperCase()}
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">JPEG는 용량이 작고, PNG는 화질 손실이 없습니다.</p>
+                  <p className="text-[12.5px] text-zinc-400 leading-relaxed">JPEG는 용량이 작고, PNG는 화질 손실이 없습니다.</p>
                 </div>
 
                 {/* Scale */}
@@ -241,15 +241,15 @@ export default function PdfToImage() {
                   <div className="space-y-1.5">
                     {SCALE_OPTIONS.map(opt => (
                       <button key={opt.value} onClick={() => setScale(opt.value)}
-                        className={`press w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[12.5px] transition-colors ${scale === opt.value
+                        className={`press w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-[14px] transition-colors ${scale === opt.value
                           ? 'bg-amber-400/[0.06] border-amber-400/30 text-amber-200'
-                          : 'bg-white/[0.02] border-white/[0.06] text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'}`}>
+                          : 'bg-white/[0.02] border-white/[0.06] text-zinc-300 hover:bg-white/[0.04] hover:text-zinc-200'}`}>
                         <span className="font-medium">{opt.label}</span>
-                        <span className="numeral text-[10.5px] opacity-70">{opt.sub}</span>
+                        <span className="numeral text-[12px] opacity-70">{opt.sub}</span>
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">배율이 높을수록 선명하지만 처리가 느리고 용량이 커집니다.</p>
+                  <p className="text-[12.5px] text-zinc-400 leading-relaxed">배율이 높을수록 선명하지만 처리가 느리고 용량이 커집니다.</p>
                 </div>
               </div>
             </div>
@@ -261,14 +261,14 @@ export default function PdfToImage() {
           {results.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="premium-panel overflow-hidden">
               <div className="px-5 py-3.5 border-b border-white/[0.05] bg-white/[0.015] flex items-center justify-between">
-                <h2 className="text-[12.5px] font-semibold text-zinc-200 flex items-center gap-2.5 tracking-tight">
+                <h2 className="text-[14px] font-semibold text-zinc-200 flex items-center gap-2.5 tracking-tight">
                   <span className="section-num">RESULT</span>
                   <Image className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
                   변환 결과
-                  <span className="numeral text-[11px] px-1.5 py-px rounded bg-amber-400/10 border border-amber-400/25 text-amber-300 ml-1">{results.length}장</span>
+                  <span className="numeral text-[12.5px] px-1.5 py-px rounded bg-amber-400/10 border border-amber-400/25 text-amber-300 ml-1">{results.length}장</span>
                 </h2>
                 <button onClick={handleDownloadZip}
-                  className="premium-btn-primary press flex items-center gap-2 px-4 py-2 text-[12.5px]">
+                  className="premium-btn-primary press flex items-center gap-2 px-4 py-2 text-[14px]">
                   <Archive className="w-3.5 h-3.5" strokeWidth={2.25} /> ZIP으로 다운로드
                 </button>
               </div>
@@ -284,11 +284,11 @@ export default function PdfToImage() {
                         </div>
                         <div className="p-2.5 bg-black/30 flex items-center justify-between border-t border-white/[0.05]">
                           <div>
-                            <p className="text-[12.5px] font-semibold text-zinc-100">페이지 {img.page}</p>
-                            <p className="numeral text-[10.5px] text-zinc-500">{img.width} × {img.height}px</p>
+                            <p className="text-[14px] font-semibold text-zinc-100">페이지 {img.page}</p>
+                            <p className="numeral text-[12px] text-zinc-400">{img.width} × {img.height}px</p>
                           </div>
                           <a href={img.dataUrl} download={downloadName}
-                            className="press p-1.5 text-zinc-500 hover:text-amber-300 hover:bg-amber-400/[0.08] rounded-md transition-colors" title="개별 다운로드">
+                            className="press p-1.5 text-zinc-400 hover:text-amber-300 hover:bg-amber-400/[0.08] rounded-md transition-colors" title="개별 다운로드">
                             <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
                           </a>
                         </div>

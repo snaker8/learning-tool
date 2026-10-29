@@ -38,10 +38,10 @@ export default function Header({
                 <div className="flex items-center gap-2.5 select-none">
                     <Mark />
                     <div className="flex items-baseline gap-2">
-                        <span className="text-[15px] font-semibold tracking-tight text-zinc-100">
+                        <span className="text-[16px] font-semibold tracking-tight text-zinc-100">
                             Learning Tool
                         </span>
-                        <span className="text-[15px] font-light tracking-tight text-zinc-500 italic">
+                        <span className="text-[16px] font-light tracking-tight text-zinc-400 italic">
                             Studio
                         </span>
                     </div>
@@ -58,10 +58,10 @@ export default function Header({
                             <button
                                 key={id}
                                 onClick={() => onTabChange?.(id)}
-                                className={`relative press flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium transition-colors ${
+                                className={`relative press flex items-center gap-2 px-3.5 py-2 rounded-lg text-[14.5px] font-medium transition-colors ${
                                     isActive
                                         ? 'text-amber-300'
-                                        : 'text-zinc-400 hover:text-zinc-100'
+                                        : 'text-zinc-300 hover:text-zinc-100'
                                 }`}
                             >
                                 {isActive && (
@@ -77,7 +77,7 @@ export default function Header({
                                 <Icon className="w-3.5 h-3.5 relative z-10" strokeWidth={2} />
                                 <span className="relative z-10">{label}</span>
                                 {ai && (
-                                    <span className="relative z-10 text-[9px] font-bold px-1 py-px rounded text-violet-300 border border-violet-400/30 bg-violet-400/10">
+                                    <span className="relative z-10 text-[11px] font-bold px-1 py-px rounded text-violet-300 border border-violet-400/30 bg-violet-400/10">
                                         AI
                                     </span>
                                 )}
@@ -95,7 +95,7 @@ export default function Header({
                 {fileName && (
                     <div className="hidden md:flex items-center gap-2 h-9 px-3 rounded-lg glass max-w-[260px]">
                         <FileText className="w-3.5 h-3.5 text-amber-300 shrink-0" strokeWidth={1.75} />
-                        <span className="text-[12px] text-zinc-300 truncate" title={fileName}>
+                        <span className="text-[13.5px] text-zinc-200 truncate" title={fileName}>
                             {fileName}
                         </span>
                     </div>
@@ -109,7 +109,7 @@ export default function Header({
                             <ZoomOut className="w-3.5 h-3.5" />
                         </IconBtn>
                         <div className="w-px h-4 bg-white/8" />
-                        <span className="numeral text-[12px] text-zinc-300 px-3 select-none min-w-[52px] text-center">
+                        <span className="numeral text-[13.5px] text-zinc-200 px-3 select-none min-w-[52px] text-center">
                             {typeof zoomLevel === 'number' ? `${Math.round(zoomLevel * 100)}%` : zoomLevel}
                         </span>
                         <div className="w-px h-4 bg-white/8" />
@@ -123,7 +123,7 @@ export default function Header({
                     </div>
 
                     {isLoading && (
-                        <div className="flex items-center gap-2 text-[12px] px-2.5 h-9 rounded-lg glass">
+                        <div className="flex items-center gap-2 text-[13.5px] px-2.5 h-9 rounded-lg glass">
                             <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" strokeWidth={2} />
                             <span className="text-amber-300/90 font-medium">분석 중</span>
                         </div>
@@ -145,7 +145,7 @@ export default function Header({
                         }}
                     >
                         <FolderOpen className="w-3.5 h-3.5" strokeWidth={2.25} />
-                        <span className="text-[13px] tracking-tight">PDF 열기</span>
+                        <span className="text-[14.5px] tracking-tight">PDF 열기</span>
                     </button>
                   </>
                 )}
@@ -172,7 +172,7 @@ function IconBtn({ children, accent, ...props }) {
             className={`press h-full px-2.5 flex items-center justify-center transition-colors ${
                 accent
                     ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/[0.08]'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                    : 'text-zinc-300 hover:text-zinc-100 hover:bg-white/5'
             }`}
         >
             {children}

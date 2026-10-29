@@ -167,7 +167,7 @@ export default function Sidebar() {
             {/* Collapse handle — refined */}
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="press absolute -left-3 top-20 z-50 w-6 h-6 rounded-full glass flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-white/20 transition-colors"
+                className="press absolute -left-3 top-20 z-50 w-6 h-6 rounded-full glass flex items-center justify-center text-zinc-300 hover:text-zinc-100 hover:border-white/20 transition-colors"
                 title={isCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
             >
                 {isCollapsed ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
@@ -186,7 +186,7 @@ export default function Sidebar() {
                             format={(v) => `${v.toFixed(1)}x`}
                             onChange={(v) => updateSettings({ renderScale: v })}
                         />
-                        <p className="text-[10px] text-zinc-600 mt-2 leading-relaxed">
+                        <p className="text-[11.5px] text-zinc-400 mt-2 leading-relaxed">
                             높을수록 고화질 — 메모리 사용 증가. 바꾸면 그 페이지를 다시 그립니다.
                         </p>
                     </div>
@@ -198,13 +198,13 @@ export default function Sidebar() {
                         className="px-5 py-2.5 flex items-center justify-between shrink-0 border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors"
                     >
                         <div className="flex items-center gap-2.5">
-                            <Settings className="w-3.5 h-3.5 text-zinc-500" strokeWidth={1.75} />
-                            <span className="text-[12px] font-medium text-zinc-400">개별 복사 설정</span>
-                            <span className="numeral text-[10.5px] text-zinc-600">
+                            <Settings className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.75} />
+                            <span className="text-[13.5px] font-medium text-zinc-300">개별 복사 설정</span>
+                            <span className="numeral text-[12px] text-zinc-400">
                                 개별 복사 {copyWidth}px{useMaxHeight ? ` · 세로 ${maxHeight}px` : ''}
                             </span>
                         </div>
-                        <ChevronRight className={`w-3.5 h-3.5 text-zinc-600 transition-transform ${showSettings ? 'rotate-90' : ''}`} />
+                        <ChevronRight className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${showSettings ? 'rotate-90' : ''}`} />
                     </button>
 
                     {showSettings && (
@@ -216,7 +216,7 @@ export default function Sidebar() {
                                     value={copyWidth}
                                     onChange={(e) => updateSettings({ copyWidth: Number(e.target.value) })}
                                     onFocus={(e) => e.target.select()}
-                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10"
+                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[14.5px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10"
                                 />
                             </Field>
                             <Field
@@ -236,18 +236,18 @@ export default function Sidebar() {
                                     disabled={!useMaxHeight}
                                     onChange={(e) => updateSettings({ maxHeight: Number(e.target.value) })}
                                     onFocus={(e) => e.target.select()}
-                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-white/[0.06]"
+                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[14.5px] text-center text-zinc-100 focus-ring transition-all hover:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-white/[0.06]"
                                 />
                             </Field>
                         </div>
 
                         {/* 인식 버튼은 시험지 위에 있다 (페이지 왼쪽 위).
                             여기 토글로 모드를 켜고 드래그까지 해야 하던 걸 없앴다. */}
-                        <p className="text-[11px] text-zinc-500 leading-relaxed">
+                        <p className="text-[12.5px] text-zinc-400 leading-relaxed">
                             문제 인식은 <span className="text-violet-300 font-medium">시험지 왼쪽 위 버튼</span>에서 합니다.
-                            <br />· <span className="text-zinc-300">이 페이지 인식</span> — 문제를 찾아 후보로 띄우고, 이후 드래그가 문제 경계에 딱 맞춰집니다
-                            <br />· <span className="text-zinc-300">전체 페이지</span> — 모든 페이지의 문제를 찾아 전부 담습니다
-                            <br />· <span className="text-zinc-300">구간 지정</span> — 필요한 페이지 구간만 (예: 12–28쪽)
+                            <br />· <span className="text-zinc-200">이 페이지 인식</span> — 문제를 찾아 후보로 띄우고, 이후 드래그가 문제 경계에 딱 맞춰집니다
+                            <br />· <span className="text-zinc-200">전체 페이지</span> — 모든 페이지의 문제를 찾아 전부 담습니다
+                            <br />· <span className="text-zinc-200">구간 지정</span> — 필요한 페이지 구간만 (예: 12–28쪽)
                             <br />드래그만 하면 그린 그대로 잘립니다 (즉시·무료).
                         </p>
 
@@ -258,17 +258,17 @@ export default function Sidebar() {
                     <div className="px-5 py-3.5 flex items-center justify-between border-y border-white/[0.05] shrink-0 bg-white/[0.015]">
                         <div className="flex items-center gap-3">
                             <span className="section-num">03</span>
-                            <h2 className="text-[13px] font-semibold text-zinc-100">
+                            <h2 className="text-[14.5px] font-semibold text-zinc-100">
                                 문제 목록
                             </h2>
-                            <span className="numeral text-[11px] px-1.5 py-px rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
+                            <span className="numeral text-[12.5px] px-1.5 py-px rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
                                 {crops.length}
                             </span>
                         </div>
                         <div className="flex gap-1.5 items-center">
                             <button
                                 onClick={() => setIsManageMode(true)}
-                                className="press flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-md text-zinc-300 bg-white/5 hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 transition-colors"
+                                className="press flex items-center gap-1.5 text-[12.5px] font-medium px-2.5 py-1.5 rounded-md text-zinc-200 bg-white/5 hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 transition-colors"
                             >
                                 <Maximize2 className="w-3 h-3" strokeWidth={2} />
                                 <span>전체확대</span>
@@ -285,7 +285,7 @@ export default function Sidebar() {
                                         clearCrops();
                                     }
                                 }}
-                                className="press flex items-center gap-1 text-[11px] text-zinc-500 hover:text-red-400 hover:bg-red-500/[0.06] px-2 py-1.5 rounded-md transition-colors"
+                                className="press flex items-center gap-1 text-[12.5px] text-zinc-400 hover:text-red-400 hover:bg-red-500/[0.06] px-2 py-1.5 rounded-md transition-colors"
                             >
                                 <Trash2 className="w-3 h-3" strokeWidth={2} />
                                 <span>전체 삭제</span>
@@ -296,9 +296,9 @@ export default function Sidebar() {
                     {/* §03 — List */}
                     <div className="flex-1 overflow-y-auto px-3 py-3 min-h-0 custom-scrollbar">
                         {crops.length === 0 ? (
-                            <div className="border border-dashed border-white/[0.08] rounded-xl h-44 flex flex-col items-center justify-center text-zinc-600 gap-3 hover:border-white/15 hover:bg-white/[0.02] transition-colors group">
+                            <div className="border border-dashed border-white/[0.08] rounded-xl h-44 flex flex-col items-center justify-center text-zinc-400 gap-3 hover:border-white/15 hover:bg-white/[0.02] transition-colors group">
                                 <GripVertical className="w-7 h-7 opacity-30 group-hover:opacity-50 transition-opacity" strokeWidth={1.5} />
-                                <span className="text-[11px] font-medium tracking-wide">드래그하여 문제를 선택하세요</span>
+                                <span className="text-[12.5px] font-medium tracking-wide">드래그하여 문제를 선택하세요</span>
                             </div>
                         ) : (
                             <Reorder.Group
@@ -335,10 +335,10 @@ export default function Sidebar() {
                                             }}
                                         >
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className={`numeral text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors ${
+                                                <span className={`numeral text-[11.5px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors ${
                                                     copiedId === crop.id
                                                         ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/25'
-                                                        : 'bg-white/[0.04] text-zinc-400 border border-white/[0.05]'
+                                                        : 'bg-white/[0.04] text-zinc-300 border border-white/[0.05]'
                                                 }`}>
                                                     {copiedId === crop.id ? (
                                                         <>
@@ -355,12 +355,12 @@ export default function Sidebar() {
                                                 </span>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); removeCrop(crop.id); }}
-                                                    className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 hover:bg-red-500/[0.08] p-1 rounded transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-400 hover:bg-red-500/[0.08] p-1 rounded transition-all"
                                                 >
                                                     <Trash2 className="w-3 h-3" strokeWidth={2} />
                                                 </button>
                                             </div>
-                                            <div className="min-h-[72px] max-h-[300px] bg-white rounded-lg flex items-center justify-center text-[10px] text-zinc-400 overflow-hidden border border-white/[0.04] relative">
+                                            <div className="min-h-[72px] max-h-[300px] bg-white rounded-lg flex items-center justify-center text-[11.5px] text-zinc-300 overflow-hidden border border-white/[0.04] relative">
                                                 {(crop.thumbUrl || crop.imageUrl) ? (
                                                     <img
                                                         src={crop.thumbUrl || crop.imageUrl}
@@ -396,11 +396,11 @@ export default function Sidebar() {
                                     <div className="flex justify-between items-center px-3 py-2.5 border-b border-white/[0.05]">
                                         <div className="flex items-center gap-3">
                                             <span className="section-num">PREVIEW</span>
-                                            <h3 className="text-zinc-100 font-semibold text-[15px] tracking-tight">문제 상세 보기</h3>
+                                            <h3 className="text-zinc-100 font-semibold text-[16px] tracking-tight">문제 상세 보기</h3>
                                         </div>
                                         <button
                                             onClick={() => setShowPreviewModal(false)}
-                                            className="press text-zinc-400 hover:text-zinc-100 p-1.5 rounded-md hover:bg-white/[0.06] transition-colors"
+                                            className="press text-zinc-300 hover:text-zinc-100 p-1.5 rounded-md hover:bg-white/[0.06] transition-colors"
                                         >
                                             <X className="w-5 h-5" strokeWidth={2} />
                                         </button>
@@ -418,7 +418,7 @@ export default function Sidebar() {
                         <div className="flex items-center gap-3 mb-3.5">
                             <span className="section-num">04</span>
                             <Layers className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
-                            <span className="text-[12px] font-semibold text-zinc-200">전체 이미지 병합</span>
+                            <span className="text-[13.5px] font-semibold text-zinc-200">전체 이미지 병합</span>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2.5 mb-3.5">
@@ -431,7 +431,7 @@ export default function Sidebar() {
                                     value={mergeWidth}
                                     onChange={(e) => updateSettings({ mergeWidth: Number(e.target.value) })}
                                     onFocus={(e) => e.target.select()}
-                                    className={`numeral w-full bg-black/30 border rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors ${
+                                    className={`numeral w-full bg-black/30 border rounded-lg px-3 py-2 text-[14.5px] text-center text-zinc-100 focus-ring transition-colors ${
                                         mergeWidth < 1600
                                             ? 'border-amber-400/40 hover:border-amber-400/60'
                                             : 'border-white/[0.06] hover:border-white/10'
@@ -444,7 +444,7 @@ export default function Sidebar() {
                                     value={mergeGap}
                                     onChange={(e) => updateSettings({ mergeGap: Number(e.target.value) })}
                                     onFocus={(e) => e.target.select()}
-                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[13px] text-center text-zinc-100 focus-ring transition-colors hover:border-white/10"
+                                    className="numeral w-full bg-black/30 border border-white/[0.06] rounded-lg px-3 py-2 text-[14.5px] text-center text-zinc-100 focus-ring transition-colors hover:border-white/10"
                                 />
                             </Field>
                         </div>
@@ -453,10 +453,10 @@ export default function Sidebar() {
                             <button
                                 onClick={handleMergeAndCopy}
                                 disabled={isMerging || crops.length === 0}
-                                className={`press flex-1 py-2.5 rounded-lg font-semibold text-[12.5px] flex justify-center items-center gap-2 transition-all border
+                                className={`press flex-1 py-2.5 rounded-lg font-semibold text-[14px] flex justify-center items-center gap-2 transition-all border
                                     ${mergeStatus === 'success'
                                         ? 'bg-emerald-400/[0.12] border-emerald-400/30 text-emerald-200'
-                                        : 'bg-amber-400 hover:bg-amber-300 border-transparent text-zinc-950 shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_24px_-8px_rgba(251,191,36,0.5)] disabled:bg-white/[0.04] disabled:text-zinc-600 disabled:shadow-none disabled:cursor-not-allowed'
+                                        : 'bg-amber-400 hover:bg-amber-300 border-transparent text-zinc-950 shadow-[0_0_0_1px_rgba(0,0,0,0.25),0_0_24px_-8px_rgba(251,191,36,0.5)] disabled:bg-white/[0.04] disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed'
                                     }`}
                             >
                                 {isMerging ? (
@@ -481,7 +481,7 @@ export default function Sidebar() {
                                 <button
                                     onClick={handleStartSequentialCopy}
                                     disabled={crops.length === 0}
-                                    className="press flex-1 py-2.5 rounded-lg text-[12.5px] font-semibold flex justify-center items-center gap-2 border border-white/[0.08] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.06] hover:text-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="press flex-1 py-2.5 rounded-lg text-[14px] font-semibold flex justify-center items-center gap-2 border border-white/[0.08] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.06] hover:text-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     <Scissors className="w-3.5 h-3.5" strokeWidth={2} />
                                     <span>개별 복사</span>
@@ -490,7 +490,7 @@ export default function Sidebar() {
                                 <div className="flex-1 flex gap-1">
                                     <button
                                         onClick={handleNextCopy}
-                                        className="press flex-1 bg-emerald-400 hover:bg-emerald-300 text-zinc-950 py-2.5 rounded-lg font-semibold text-[12.5px] flex justify-center items-center gap-1.5 transition-colors"
+                                        className="press flex-1 bg-emerald-400 hover:bg-emerald-300 text-zinc-950 py-2.5 rounded-lg font-semibold text-[14px] flex justify-center items-center gap-1.5 transition-colors"
                                     >
                                         <span className="numeral">{sequentialIndex + 1}/{crops.length}</span>
                                         <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -516,7 +516,7 @@ export default function Sidebar() {
                                         <h2 className="text-[20px] font-semibold text-zinc-50 tracking-tight">
                                             문제 전체확대
                                         </h2>
-                                        <span className="numeral text-[12px] px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
+                                        <span className="numeral text-[13.5px] px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
                                             Total {crops.length}
                                         </span>
                                     </div>
@@ -524,20 +524,20 @@ export default function Sidebar() {
                                     <div className="glass p-1 rounded-lg flex items-center gap-1">
                                         <button
                                             onClick={() => setViewMode('list')}
-                                            className={`press px-3 py-1.5 rounded-md text-[11.5px] font-medium transition-colors ${
+                                            className={`press px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
                                                 viewMode === 'list'
                                                     ? 'bg-amber-400 text-zinc-950'
-                                                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                                                    : 'text-zinc-300 hover:text-zinc-100 hover:bg-white/5'
                                             }`}
                                         >
                                             리스트형 (순서변경)
                                         </button>
                                         <button
                                             onClick={() => setViewMode('grid')}
-                                            className={`press px-3 py-1.5 rounded-md text-[11.5px] font-medium transition-colors ${
+                                            className={`press px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
                                                 viewMode === 'grid'
                                                     ? 'bg-amber-400 text-zinc-950'
-                                                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                                                    : 'text-zinc-300 hover:text-zinc-100 hover:bg-white/5'
                                             }`}
                                         >
                                             바둑판형 (한눈에 보기)
@@ -548,13 +548,13 @@ export default function Sidebar() {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={handleSortCrops}
-                                        className="press text-[12px] font-medium px-3 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 hover:text-zinc-50 transition-colors"
+                                        className="press text-[13.5px] font-medium px-3 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 hover:text-zinc-50 transition-colors"
                                     >
                                         번호순 정렬
                                     </button>
                                     <button
                                         onClick={() => setIsManageMode(false)}
-                                        className="press w-9 h-9 rounded-lg glass hover:bg-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-zinc-50 transition-colors"
+                                        className="press w-9 h-9 rounded-lg glass hover:bg-white/[0.06] flex items-center justify-center text-zinc-300 hover:text-zinc-50 transition-colors"
                                     >
                                         <X className="w-4 h-4" strokeWidth={2} />
                                     </button>
@@ -586,10 +586,10 @@ export default function Sidebar() {
                                                     onClick={() => handleQuickCopy(crop)}
                                                 >
                                                     <div className="flex flex-col gap-2.5 shrink-0 w-32">
-                                                        <span className={`numeral text-[12px] font-medium px-2 py-1.5 rounded-md border transition-colors flex items-center justify-center gap-1.5 ${
+                                                        <span className={`numeral text-[13.5px] font-medium px-2 py-1.5 rounded-md border transition-colors flex items-center justify-center gap-1.5 ${
                                                             copiedId === crop.id
                                                                 ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                                                                : 'bg-white/[0.04] text-zinc-300 border-white/[0.06]'
+                                                                : 'bg-white/[0.04] text-zinc-200 border-white/[0.06]'
                                                         }`}>
                                                             {copiedId === crop.id ? (
                                                                 <>
@@ -603,12 +603,12 @@ export default function Sidebar() {
                                                                 </>
                                                             )}
                                                         </span>
-                                                        <div className="numeral text-[10px] text-zinc-600 text-center">
+                                                        <div className="numeral text-[11.5px] text-zinc-400 text-center">
                                                             Page {crop.pageNum}
                                                         </div>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); removeCrop(crop.id); }}
-                                                            className="press text-zinc-500 hover:text-red-400 bg-white/[0.03] hover:bg-red-500/[0.08] py-1.5 rounded-md transition-colors flex justify-center"
+                                                            className="press text-zinc-400 hover:text-red-400 bg-white/[0.03] hover:bg-red-500/[0.08] py-1.5 rounded-md transition-colors flex justify-center"
                                                             title="삭제"
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
@@ -625,7 +625,7 @@ export default function Sidebar() {
                                                         {crop.imageUrl ? (
                                                             <img src={crop.thumbUrl || crop.imageUrl} alt="Crop preview" loading="lazy" decoding="async" className="h-full object-contain p-2 pointer-events-none" />
                                                         ) : (
-                                                            <span className="text-[10px] text-zinc-700">No Preview</span>
+                                                            <span className="text-[11.5px] text-zinc-500">No Preview</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -645,10 +645,10 @@ export default function Sidebar() {
                                                 onClick={() => handleQuickCopy(crop)}
                                             >
                                                 <div className="flex justify-between items-center mb-2.5">
-                                                    <span className={`numeral text-[11px] font-medium px-2 py-0.5 rounded border transition-colors flex items-center gap-1 ${
+                                                    <span className={`numeral text-[12.5px] font-medium px-2 py-0.5 rounded border transition-colors flex items-center gap-1 ${
                                                         copiedId === crop.id
                                                             ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                                                            : 'bg-white/[0.04] text-zinc-400 border-white/[0.06]'
+                                                            : 'bg-white/[0.04] text-zinc-300 border-white/[0.06]'
                                                     }`}>
                                                         {copiedId === crop.id ? (
                                                             <>
@@ -661,7 +661,7 @@ export default function Sidebar() {
                                                     </span>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); removeCrop(crop.id); }}
-                                                        className="press opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 bg-white/[0.04] hover:bg-red-500/[0.08] p-1 rounded transition-all"
+                                                        className="press opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-400 bg-white/[0.04] hover:bg-red-500/[0.08] p-1 rounded transition-all"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
                                                     </button>
@@ -670,7 +670,7 @@ export default function Sidebar() {
                                                     {crop.imageUrl ? (
                                                         <img src={crop.thumbUrl || crop.imageUrl} alt="Crop preview" loading="lazy" decoding="async" className="w-full h-full object-contain p-2 pointer-events-none" />
                                                     ) : (
-                                                        <span className="text-[10px] text-zinc-700">No Preview</span>
+                                                        <span className="text-[11.5px] text-zinc-500">No Preview</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -700,9 +700,9 @@ function Section({ num, title, hint, Icon, children }) {
             <div className="flex items-center gap-3 mb-3.5">
                 <span className="section-num">{num}</span>
                 {Icon && <Icon className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />}
-                <span className="text-[12.5px] font-semibold text-zinc-200 tracking-tight">{title}</span>
+                <span className="text-[14px] font-semibold text-zinc-200 tracking-tight">{title}</span>
                 {hint && (
-                    <span className="ml-auto numeral text-[10px] text-zinc-500 px-1.5 py-px rounded bg-white/[0.04] border border-white/[0.06]">
+                    <span className="ml-auto numeral text-[11.5px] text-zinc-400 px-1.5 py-px rounded bg-white/[0.04] border border-white/[0.06]">
                         {hint}
                     </span>
                 )}
@@ -716,7 +716,7 @@ function Field({ label, trailing, children, small }) {
     return (
         <div className="space-y-1.5">
             <div className="flex justify-between items-center min-h-[14px]">
-                <label className={`eyebrow ${small ? 'text-[9px]' : ''}`}>{label}</label>
+                <label className={`eyebrow ${small ? 'text-[11px]' : ''}`}>{label}</label>
                 {trailing}
             </div>
             {children}
@@ -744,8 +744,8 @@ function Slider({ label, value, min, max, step = 1, onChange, format }) {
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-baseline">
-                <span className="text-[11.5px] text-zinc-400 font-medium">{label}</span>
-                <span className="numeral text-[12px] font-semibold text-amber-300 tabular-nums">
+                <span className="text-[13px] text-zinc-300 font-medium">{label}</span>
+                <span className="numeral text-[13.5px] font-semibold text-amber-300 tabular-nums">
                     {format ? format(value) : value}
                 </span>
             </div>

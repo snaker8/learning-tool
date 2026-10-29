@@ -23,9 +23,9 @@
 
   /* Semantic */
   --text-primary: #fafafa;
-  --text-secondary: #a1a1aa; /* zinc-400 */
-  --text-tertiary: #71717a;  /* zinc-500 */
-  --text-muted: #52525b;     /* zinc-600 */
+  --text-secondary: #d4d4d8; /* zinc-300 */
+  --text-tertiary: #a1a1aa;  /* zinc-400 */
+  --text-muted: #8b8b94;     /* zinc-450 */
 
   --success: #34d399;
   --danger: #f87171;
@@ -72,7 +72,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Editorial caption — small, tracked, uppercase */
 .eyebrow {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -82,7 +82,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Section number — editorial "01 / 02 /" style */
 .section-num {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 500;
   letter-spacing: 0.08em;
   color: var(--text-muted);

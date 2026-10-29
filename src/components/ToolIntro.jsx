@@ -22,7 +22,7 @@ export default function ToolIntro({ toolId, right = null }) {
           <div className="flex items-center gap-2">
             <h1 className="text-[19px] font-semibold tracking-tight text-zinc-100">{label}</h1>
             <span
-              className={`text-[10px] font-bold px-1.5 py-px rounded border ${
+              className={`text-[11.5px] font-bold px-1.5 py-px rounded border ${
                 isAi
                   ? 'text-violet-300 border-violet-400/30 bg-violet-400/10'
                   : 'text-emerald-300 border-emerald-400/25 bg-emerald-400/10'
@@ -30,18 +30,18 @@ export default function ToolIntro({ toolId, right = null }) {
             >
               {tag}
             </span>
-            <span className="text-[11px] text-zinc-600 mono ml-1">{accepts}</span>
+            <span className="text-[12.5px] text-zinc-400 mono ml-1">{accepts}</span>
           </div>
-          <p className="text-[13px] text-zinc-500 mt-1 leading-relaxed">{summary}</p>
+          <p className="text-[14.5px] text-zinc-400 mt-1 leading-relaxed">{summary}</p>
 
           <div className="mt-3 flex items-center gap-1.5 flex-wrap">
             {steps.map((s, i) => (
               <span key={s} className="flex items-center gap-1.5">
-                <span className="text-[11.5px] text-zinc-400 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.05]">
-                  <span className="text-zinc-600 mr-1">{i + 1}</span>
+                <span className="text-[13px] text-zinc-300 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.05]">
+                  <span className="text-zinc-400 mr-1">{i + 1}</span>
                   {s}
                 </span>
-                {i < steps.length - 1 && <span className="text-zinc-700 text-[10px]">→</span>}
+                {i < steps.length - 1 && <span className="text-zinc-500 text-[11.5px]">→</span>}
               </span>
             ))}
           </div>
@@ -50,12 +50,12 @@ export default function ToolIntro({ toolId, right = null }) {
         <div className="flex items-center gap-2 shrink-0">
           {right}
           {isAi ? (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl glass text-[11.5px] text-violet-300/90">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl glass text-[13px] text-violet-300/90">
               <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
               <span className="font-medium">AI 분석 — 파일이 서버로 전송됩니다</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl glass text-[11.5px] text-emerald-300/90">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl glass text-[13px] text-emerald-300/90">
               <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
               <span className="font-medium">이 컴퓨터에서만 처리됩니다</span>
             </div>

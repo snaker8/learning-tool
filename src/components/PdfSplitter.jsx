@@ -129,7 +129,7 @@ function PageThumb({ pdfDoc, pageNum, label, pageKey, isSelected, onClick }) {
         style={{ width: 120, minHeight: 160 }}>
         {!rendered && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/5">
-            <Loader2 className="w-5 h-5 text-white/30 animate-spin" />
+            <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
           </div>
         )}
         {thumbSrc ? (
@@ -149,7 +149,7 @@ function PageThumb({ pdfDoc, pageNum, label, pageKey, isSelected, onClick }) {
           </div>
         )}
       </div>
-      <span className={`numeral text-[11px] font-medium tabular-nums transition-colors ${isSelected ? 'text-amber-300' : 'text-white/40 group-hover:text-white/70'}`}>
+      <span className={`numeral text-[12.5px] font-medium tabular-nums transition-colors ${isSelected ? 'text-amber-300' : 'text-white/60 group-hover:text-white/70'}`}>
         {label}
       </span>
     </div>
@@ -538,12 +538,12 @@ export default function PdfSplitter() {
               >
                 <span className="absolute top-5 left-6 section-num">PDF · 분할 / 합치기</span>
                 <span className="absolute top-5 right-6 eyebrow">DRAG / CLICK</span>
-                <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-zinc-300 group-hover:text-amber-300 transition-colors">
+                <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-zinc-200 group-hover:text-amber-300 transition-colors">
                   {isLoading ? <Loader2 size={28} strokeWidth={1.5} className="animate-spin" /> : <FileUp size={28} strokeWidth={1.5} />}
                 </div>
                 <div className="space-y-1.5 mt-1">
                   <h3 className="m-0 text-[18px] font-semibold text-zinc-100 tracking-tight">PDF 파일 업로드</h3>
-                  <p className="m-0 text-[13px] text-zinc-500">여러 개를 한꺼번에 끌어다 놓을 수 있습니다</p>
+                  <p className="m-0 text-[14.5px] text-zinc-400">여러 개를 한꺼번에 끌어다 놓을 수 있습니다</p>
                 </div>
               </div>
             </motion.div>
@@ -551,18 +551,18 @@ export default function PdfSplitter() {
             <motion.div key="thumbs" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {/* Selection hint bar */}
               <div className="flex items-center justify-between mb-5 px-1 gap-4">
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[12.5px] text-zinc-400">
                   <span className="mono">드래그</span> 영역 선택
-                  <span className="mx-2 text-zinc-700">·</span>
+                  <span className="mx-2 text-zinc-500">·</span>
                   <span className="mono">Shift+클릭</span> 범위 선택
-                  <span className="mx-2 text-zinc-700">·</span>
+                  <span className="mx-2 text-zinc-500">·</span>
                   <span className="mono">Ctrl+클릭/드래그</span> 추가 선택
                 </p>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button onClick={selectAll} className="press text-[11.5px] text-zinc-300 hover:text-zinc-50 transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/5 border border-white/[0.06]">
+                  <button onClick={selectAll} className="press text-[13px] text-zinc-200 hover:text-zinc-50 transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/5 border border-white/[0.06]">
                     전체 선택
                   </button>
-                  <button onClick={clearSelection} className="press text-[11.5px] text-zinc-400 hover:text-zinc-100 transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/5">
+                  <button onClick={clearSelection} className="press text-[13px] text-zinc-300 hover:text-zinc-100 transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/5">
                     해제
                   </button>
                 </div>
@@ -575,16 +575,16 @@ export default function PdfSplitter() {
                     <section key={f.id}>
                       {files.length > 1 && (
                         <div className="flex items-center gap-2 mb-3 px-1">
-                          <span className="numeral text-[11px] text-amber-300/80">{offset + 1}–{offset + f.numPages}</span>
-                          <span className="text-[12px] text-zinc-300 truncate">{f.file.name}</span>
+                          <span className="numeral text-[12.5px] text-amber-300/80">{offset + 1}–{offset + f.numPages}</span>
+                          <span className="text-[13.5px] text-zinc-200 truncate">{f.file.name}</span>
                           <div className="flex items-center gap-0.5 ml-auto flex-shrink-0">
-                            <button onClick={() => moveFile(f.id, -1)} disabled={fi === 0} title="앞으로" className="press p-1 rounded text-zinc-500 hover:text-zinc-100 hover:bg-white/5 disabled:opacity-30 disabled:pointer-events-none">
+                            <button onClick={() => moveFile(f.id, -1)} disabled={fi === 0} title="앞으로" className="press p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-white/5 disabled:opacity-30 disabled:pointer-events-none">
                               <ArrowUp size={13} />
                             </button>
-                            <button onClick={() => moveFile(f.id, 1)} disabled={fi === files.length - 1} title="뒤로" className="press p-1 rounded text-zinc-500 hover:text-zinc-100 hover:bg-white/5 disabled:opacity-30 disabled:pointer-events-none">
+                            <button onClick={() => moveFile(f.id, 1)} disabled={fi === files.length - 1} title="뒤로" className="press p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-white/5 disabled:opacity-30 disabled:pointer-events-none">
                               <ArrowDown size={13} />
                             </button>
-                            <button onClick={() => removeFile(f.id)} title="이 파일 빼기" className="press p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-red-500/10">
+                            <button onClick={() => removeFile(f.id)} title="이 파일 빼기" className="press p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-red-500/10">
                               <X size={13} />
                             </button>
                           </div>
@@ -634,16 +634,16 @@ export default function PdfSplitter() {
               <span className="section-num">FILE</span>
               <div className="mt-2 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-zinc-100 truncate tracking-tight">
+                  <p className="text-[14.5px] font-semibold text-zinc-100 truncate tracking-tight">
                     {files.length === 1 ? files[0].file.name : `PDF ${files.length}개`}
                   </p>
-                  <p className="numeral text-[11px] text-zinc-500 mt-0.5">{totalPages}p · {(totalSize / 1024 / 1024).toFixed(1)} MB</p>
+                  <p className="numeral text-[12.5px] text-zinc-400 mt-0.5">{totalPages}p · {(totalSize / 1024 / 1024).toFixed(1)} MB</p>
                 </div>
                 <div className="flex items-center gap-0.5 flex-shrink-0">
-                  <button onClick={() => fileInputRef.current?.click()} title="파일 추가" className="press p-1.5 text-zinc-500 hover:text-amber-300 hover:bg-amber-400/10 rounded-md transition-colors">
+                  <button onClick={() => fileInputRef.current?.click()} title="파일 추가" className="press p-1.5 text-zinc-400 hover:text-amber-300 hover:bg-amber-400/10 rounded-md transition-colors">
                     {isLoading ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} strokeWidth={1.75} />}
                   </button>
-                  <button onClick={clearAll} title="모두 닫기" className="press p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors">
+                  <button onClick={clearAll} title="모두 닫기" className="press p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors">
                     <Trash2 size={15} strokeWidth={1.75} />
                   </button>
                 </div>
@@ -658,13 +658,13 @@ export default function PdfSplitter() {
                 onChange={(e) => setRangeText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') applyRange(e.shiftKey ? 'add' : 'replace'); }}
                 placeholder={`예: 1-5, 8, 10-${Math.max(totalPages, 12)}`}
-                className="numeral mt-2 w-full px-2.5 py-1.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-[12px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-400/40"
+                className="numeral mt-2 w-full px-2.5 py-1.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-[13.5px] text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-amber-400/40"
               />
               <div className="mt-2 flex gap-1.5">
-                <button onClick={() => applyRange('replace')} disabled={!rangeText.trim()} className="press flex-1 text-[11.5px] text-zinc-200 px-2 py-1.5 rounded-md border border-white/[0.08] hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none">
+                <button onClick={() => applyRange('replace')} disabled={!rangeText.trim()} className="press flex-1 text-[13px] text-zinc-200 px-2 py-1.5 rounded-md border border-white/[0.08] hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none">
                   이 범위 선택
                 </button>
-                <button onClick={() => applyRange('add')} disabled={!rangeText.trim()} className="press flex-1 text-[11.5px] text-zinc-400 px-2 py-1.5 rounded-md hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40 disabled:pointer-events-none">
+                <button onClick={() => applyRange('add')} disabled={!rangeText.trim()} className="press flex-1 text-[13px] text-zinc-300 px-2 py-1.5 rounded-md hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40 disabled:pointer-events-none">
                   추가로 선택
                 </button>
               </div>
@@ -678,11 +678,11 @@ export default function PdfSplitter() {
               >
                 <div className="flex items-center gap-2.5">
                   <span className="eyebrow">선택된 페이지</span>
-                  <span className="numeral text-[12px] px-1.5 py-px rounded bg-amber-400/10 border border-amber-400/25 text-amber-300">
+                  <span className="numeral text-[13.5px] px-1.5 py-px rounded bg-amber-400/10 border border-amber-400/25 text-amber-300">
                     {selectedPages.length}
                   </span>
                 </div>
-                {panelOpen ? <ChevronUp size={13} className="text-zinc-500" /> : <ChevronDown size={13} className="text-zinc-500" />}
+                {panelOpen ? <ChevronUp size={13} className="text-zinc-400" /> : <ChevronDown size={13} className="text-zinc-400" />}
               </button>
 
               <AnimatePresence>
@@ -696,12 +696,12 @@ export default function PdfSplitter() {
                     <div className="px-4 pb-4">
                       {selectedPages.length === 0 ? (
                         <div className="flex flex-col items-center gap-2 py-8 text-center">
-                          <Square className="w-7 h-7 text-zinc-700" strokeWidth={1.5} />
-                          <p className="text-[11px] text-zinc-500 leading-relaxed">왼쪽에서 페이지를<br/>클릭하거나 드래그해 고르세요</p>
+                          <Square className="w-7 h-7 text-zinc-500" strokeWidth={1.5} />
+                          <p className="text-[12.5px] text-zinc-400 leading-relaxed">왼쪽에서 페이지를<br/>클릭하거나 드래그해 고르세요</p>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-[11px] text-zinc-500 mb-3">
+                          <p className="text-[12.5px] text-zinc-400 mb-3">
                             범위 <span className="numeral ml-1 text-amber-300">{formatRanges(selectedNums)}</span>
                           </p>
                           {/* Selected page chips */}
@@ -712,7 +712,7 @@ export default function PdfSplitter() {
                                 onClick={() => setSelectedKeys(prev => {
                                   const n = new Set(prev); n.delete(p.key); return n;
                                 })}
-                                className="numeral press text-[11px] px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-300 hover:bg-red-500/20 hover:text-red-300 border border-white/[0.06] hover:border-red-500/30 transition-colors"
+                                className="numeral press text-[12.5px] px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-200 hover:bg-red-500/20 hover:text-red-300 border border-white/[0.06] hover:border-red-500/30 transition-colors"
                                 title="클릭해서 제거"
                               >
                                 {p.index + 1}
@@ -732,7 +732,7 @@ export default function PdfSplitter() {
               <button
                 onClick={handleMerge}
                 disabled={!!isProcessing || mergeCount === 0}
-                className="premium-btn-primary w-full py-3 flex items-center justify-center gap-2 text-[13px] relative overflow-hidden press"
+                className="premium-btn-primary w-full py-3 flex items-center justify-center gap-2 text-[14.5px] relative overflow-hidden press"
               >
                 {isProcessing === 'merge' ? (
                   <>
@@ -750,7 +750,7 @@ export default function PdfSplitter() {
               <button
                 onClick={handleSplit}
                 disabled={!!isProcessing || selectedPages.length === 0}
-                className="w-full py-2.5 flex items-center justify-center gap-2 text-[12.5px] relative overflow-hidden press rounded-xl border border-white/[0.10] text-zinc-200 hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                className="w-full py-2.5 flex items-center justify-center gap-2 text-[14px] relative overflow-hidden press rounded-xl border border-white/[0.10] text-zinc-200 hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors"
               >
                 {isProcessing === 'split' ? (
                   <>
@@ -765,7 +765,7 @@ export default function PdfSplitter() {
                   </>
                 )}
               </button>
-              <p className="text-center text-[11px] text-zinc-500">합치기는 PDF 하나, 분할은 ZIP 으로 받습니다</p>
+              <p className="text-center text-[12.5px] text-zinc-400">합치기는 PDF 하나, 분할은 ZIP 으로 받습니다</p>
             </div>
           </motion.aside>
         )}

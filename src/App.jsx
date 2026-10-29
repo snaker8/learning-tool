@@ -165,7 +165,7 @@ function MakerMain({ pdfFile, zoomScale, onOpenFile, onDropFile, hasNonPdf }) {
       )}
       {pdfFile && isDragOver && (
         <div className="pointer-events-none absolute inset-4 rounded-3xl border-2 border-dashed border-amber-400/60 bg-amber-400/5 flex items-center justify-center z-50">
-          <div className="px-5 py-3 rounded-xl glass-strong text-amber-200 font-semibold text-[14px] tracking-tight">
+          <div className="px-5 py-3 rounded-xl glass-strong text-amber-200 font-semibold text-[15px] tracking-tight">
             새 PDF로 교체
           </div>
         </div>
@@ -190,7 +190,7 @@ function EmptyState({ onOpenFile, isDragOver, hasNonPdf }) {
         <div className="relative z-10 flex flex-col items-center gap-6 px-8 text-center">
           <div className="relative">
             <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center">
-              <FileText className="w-7 h-7 text-zinc-400" strokeWidth={1.5} />
+              <FileText className="w-7 h-7 text-zinc-300" strokeWidth={1.5} />
             </div>
             <div className="absolute -inset-3 rounded-2xl border border-amber-400/20 animate-pulse pointer-events-none" />
           </div>
@@ -199,7 +199,7 @@ function EmptyState({ onOpenFile, isDragOver, hasNonPdf }) {
             <h2 className="text-2xl font-semibold text-zinc-100 tracking-tight">
               {hasNonPdf ? '이 도구는 PDF만 다룹니다' : 'PDF 파일을 열어주세요'}
             </h2>
-            <p className="text-sm text-zinc-500 leading-relaxed">
+            <p className="text-sm text-zinc-400 leading-relaxed">
               {hasNonPdf
                 ? '지금 열려 있는 파일은 이미지입니다. 판서 제작기에는 PDF를 열어주세요.'
                 : '파일을 열고 캔버스에 드래그하면 자동으로 영역을 잘라 문제 단위로 인식합니다.'}
@@ -221,15 +221,15 @@ function EmptyState({ onOpenFile, isDragOver, hasNonPdf }) {
           <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
             {['PDF 열기', '문제 영역 드래그', '복사해서 붙여넣기'].map((s, i, arr) => (
               <span key={s} className="flex items-center gap-1.5">
-                <span className="text-[11.5px] text-zinc-400 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.05]">
-                  <span className="text-zinc-600 mr-1">{i + 1}</span>{s}
+                <span className="text-[13px] text-zinc-300 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.05]">
+                  <span className="text-zinc-400 mr-1">{i + 1}</span>{s}
                 </span>
-                {i < arr.length - 1 && <span className="text-zinc-700 text-[10px]">→</span>}
+                {i < arr.length - 1 && <span className="text-zinc-500 text-[11.5px]">→</span>}
               </span>
             ))}
           </div>
 
-          <div className="text-[11px] text-zinc-600 mono">
+          <div className="text-[12.5px] text-zinc-400 mono">
             .PDF · 이 컴퓨터에서만 처리됩니다
           </div>
         </div>

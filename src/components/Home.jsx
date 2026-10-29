@@ -31,12 +31,12 @@ export default function Home({ onPick }) {
             <h1 className="text-[28px] leading-tight font-semibold tracking-tight text-zinc-100">
               교재를 수업 자료로 바꾸는 도구
             </h1>
-            <p className="text-[14px] text-zinc-500 mt-2 leading-relaxed">
+            <p className="text-[15px] text-zinc-400 mt-2 leading-relaxed">
               PDF를 한 번만 열면 아래 도구들이 같은 파일을 이어받습니다.
               탭을 옮길 때마다 다시 열 필요가 없습니다.
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl glass text-[12px] text-emerald-300/90">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl glass text-[13.5px] text-emerald-300/90">
             <ShieldCheck className="w-4 h-4" strokeWidth={2} />
             <span className="font-medium">파일은 이 컴퓨터에서만 처리됩니다</span>
           </div>
@@ -50,19 +50,19 @@ export default function Home({ onPick }) {
                 <FileText className="w-5 h-5 text-amber-300" strokeWidth={1.75} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-medium text-zinc-100 truncate">{file.name}</div>
-                <div className="text-[12px] text-zinc-500 numeral">
+                <div className="text-[15px] font-medium text-zinc-100 truncate">{file.name}</div>
+                <div className="text-[13.5px] text-zinc-400 numeral">
                   {formatSize(file.size)} · 아래 도구에서 바로 이어서 씁니다
                 </div>
               </div>
-              <label className="press cursor-pointer text-[12px] px-3 py-2 rounded-lg glass hover:bg-white/[0.05] text-zinc-300 transition-colors">
+              <label className="press cursor-pointer text-[13.5px] px-3 py-2 rounded-lg glass hover:bg-white/[0.05] text-zinc-200 transition-colors">
                 다른 파일
                 <input type="file" accept="application/pdf,image/*" className="hidden" onChange={handleInput} />
               </label>
               <button
                 onClick={clearFile}
                 aria-label="파일 닫기"
-                className="press w-9 h-9 rounded-lg glass hover:bg-white/[0.05] flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition-colors"
+                className="press w-9 h-9 rounded-lg glass hover:bg-white/[0.05] flex items-center justify-center text-zinc-300 hover:text-zinc-100 transition-colors"
               >
                 <X className="w-4 h-4" strokeWidth={2} />
               </button>
@@ -81,10 +81,10 @@ export default function Home({ onPick }) {
               <div className="w-12 h-12 rounded-2xl glass mx-auto flex items-center justify-center mb-3">
                 <Upload className="w-5 h-5 text-amber-300" strokeWidth={1.75} />
               </div>
-              <div className="text-[15px] font-semibold text-zinc-100">
+              <div className="text-[16px] font-semibold text-zinc-100">
                 PDF를 열거나 이곳에 끌어다 놓으세요
               </div>
-              <div className="text-[12px] text-zinc-500 mt-1.5">
+              <div className="text-[13.5px] text-zinc-400 mt-1.5">
                 먼저 도구를 골라도 됩니다 · PDF · PNG · JPG
               </div>
               <input type="file" accept="application/pdf,image/*" className="hidden" onChange={handleInput} />
@@ -94,8 +94,8 @@ export default function Home({ onPick }) {
 
         {/* — 도구 — */}
         <div className="mt-9 flex items-baseline gap-3">
-          <h2 className="text-[15px] font-semibold text-zinc-200 tracking-tight">도구</h2>
-          <span className="text-[12px] text-zinc-600">
+          <h2 className="text-[16px] font-semibold text-zinc-200 tracking-tight">도구</h2>
+          <span className="text-[13.5px] text-zinc-400">
             무료 도구는 이 컴퓨터에서 처리되고, AI 도구는 서버 분석을 씁니다
           </span>
         </div>
@@ -137,9 +137,9 @@ function ToolCard({ tool, index, hasFile, onPick }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-semibold text-zinc-100 tracking-tight">{label}</span>
+            <span className="text-[16px] font-semibold text-zinc-100 tracking-tight">{label}</span>
             <span
-              className={`text-[10px] font-bold px-1.5 py-px rounded border ${
+              className={`text-[11.5px] font-bold px-1.5 py-px rounded border ${
                 isAi
                   ? 'text-violet-300 border-violet-400/30 bg-violet-400/10'
                   : 'text-emerald-300 border-emerald-400/25 bg-emerald-400/10'
@@ -148,11 +148,11 @@ function ToolCard({ tool, index, hasFile, onPick }) {
               {tag}
             </span>
           </div>
-          <p className="text-[13px] text-zinc-500 mt-1 leading-relaxed">{summary}</p>
+          <p className="text-[14.5px] text-zinc-400 mt-1 leading-relaxed">{summary}</p>
         </div>
 
         <ArrowRight
-          className="w-4 h-4 text-zinc-600 group-hover:text-amber-300 transition-colors shrink-0 mt-1"
+          className="w-4 h-4 text-zinc-400 group-hover:text-amber-300 transition-colors shrink-0 mt-1"
           strokeWidth={2}
         />
       </div>
@@ -161,16 +161,16 @@ function ToolCard({ tool, index, hasFile, onPick }) {
       <div className="mt-4 flex items-center gap-1.5 flex-wrap">
         {steps.map((s, i) => (
           <span key={s} className="flex items-center gap-1.5">
-            <span className="text-[11px] text-zinc-500 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.05]">
+            <span className="text-[12.5px] text-zinc-400 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.05]">
               {i + 1}. {s}
             </span>
-            {i < steps.length - 1 && <span className="text-zinc-700 text-[10px]">→</span>}
+            {i < steps.length - 1 && <span className="text-zinc-500 text-[11.5px]">→</span>}
           </span>
         ))}
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-[11px]">
-        <span className="text-zinc-600 mono">{accepts}</span>
+      <div className="mt-3 flex items-center justify-between text-[12.5px]">
+        <span className="text-zinc-400 mono">{accepts}</span>
         {hasFile && (
           <span className="text-amber-300/80 font-medium">연 파일로 바로 시작</span>
         )}

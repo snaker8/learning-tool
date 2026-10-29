@@ -111,7 +111,7 @@ const STYLES = {
   info: {
     Icon: Info,
     ring: 'border-white/[0.1]',
-    tint: 'text-zinc-300',
+    tint: 'text-zinc-200',
     glow: 'none',
   },
   error: {
@@ -136,11 +136,11 @@ function Toast({ toast, onClose }) {
       role="status"
     >
       <Icon className={`w-4 h-4 shrink-0 mt-px ${tint}`} strokeWidth={2} />
-      <span className="text-[13px] leading-relaxed text-zinc-200">{toast.message}</span>
+      <span className="text-[14.5px] leading-relaxed text-zinc-200">{toast.message}</span>
       <button
         onClick={onClose}
         aria-label="닫기"
-        className="press shrink-0 -mr-1 w-6 h-6 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition-colors"
+        className="press shrink-0 -mr-1 w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-white/5 transition-colors"
       >
         <X className="w-3.5 h-3.5" strokeWidth={2} />
       </button>
@@ -184,11 +184,11 @@ function ConfirmDialog({ ask, onAnswer }) {
             )}
           </div>
           <div className="min-w-0 pt-0.5">
-            <h3 className="text-[15px] font-semibold text-zinc-100 tracking-tight leading-snug">
+            <h3 className="text-[16px] font-semibold text-zinc-100 tracking-tight leading-snug">
               {title}
             </h3>
             {message && (
-              <p className="text-[13px] text-zinc-400 mt-1.5 leading-relaxed whitespace-pre-line">
+              <p className="text-[14.5px] text-zinc-300 mt-1.5 leading-relaxed whitespace-pre-line">
                 {message}
               </p>
             )}
@@ -198,14 +198,14 @@ function ConfirmDialog({ ask, onAnswer }) {
         <div className="mt-6 flex items-center justify-end gap-2">
           <button
             onClick={() => onAnswer(false)}
-            className="press px-4 py-2 rounded-lg text-[13px] font-medium text-zinc-300 glass hover:bg-white/[0.05] transition-colors"
+            className="press px-4 py-2 rounded-lg text-[14.5px] font-medium text-zinc-200 glass hover:bg-white/[0.05] transition-colors"
           >
             취소
           </button>
           <button
             autoFocus
             onClick={() => onAnswer(true)}
-            className={`press px-4 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
+            className={`press px-4 py-2 rounded-lg text-[14.5px] font-semibold transition-colors ${
               danger
                 ? 'bg-rose-400 hover:bg-rose-300 text-zinc-950'
                 : 'bg-amber-400 hover:bg-amber-300 text-zinc-950'

@@ -530,7 +530,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/35 backdrop-blur-[2px] pointer-events-none">
                     <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-zinc-950/85 border border-white/10 shadow-lg">
                         <div className="w-4 h-4 rounded-full border-2 border-zinc-700 border-t-amber-400 animate-spin" />
-                        <span className="text-[12.5px] font-medium text-zinc-100">문제 인식 중…</span>
+                        <span className="text-[14px] font-medium text-zinc-100">문제 인식 중…</span>
                     </div>
                 </div>
             )}
@@ -545,14 +545,14 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 {!pageDetections ? (
                     /* 처음 보는 사람도 뭘 하는 버튼인지 알도록 '무엇을' + '어디까지'로 묶는다 */
                     <div className="flex items-stretch rounded-lg overflow-hidden border border-violet-300/30 shadow-lg backdrop-blur-md">
-                        <div className="flex items-center gap-1.5 px-2.5 bg-violet-500/90 text-white text-[11.5px] font-semibold">
+                        <div className="flex items-center gap-1.5 px-2.5 bg-violet-500/90 text-white text-[13px] font-semibold">
                             <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
                             <span>AI 문제 인식</span>
                         </div>
                         <button
                             onClick={handleDetect}
                             disabled={isDetecting}
-                            className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[11.5px] font-medium transition-colors disabled:opacity-60 border-l border-white/15"
+                            className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[13px] font-medium transition-colors disabled:opacity-60 border-l border-white/15"
                             title="이 페이지의 문제를 찾아 후보로 표시합니다. 이후 드래그가 문제 경계에 딱 맞춰집니다 (약 ₩6)"
                         >
                             이 페이지
@@ -561,14 +561,14 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                             <>
                                 <button
                                     onClick={() => onGlobalCrop(null)}
-                                    className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[11.5px] font-medium transition-colors border-l border-white/15"
+                                    className="press px-2.5 py-1.5 bg-black/70 hover:bg-violet-500 text-white text-[13px] font-medium transition-colors border-l border-white/15"
                                     title="모든 페이지의 문제를 찾아 전부 담습니다 (페이지당 약 ₩6)"
                                 >
                                     전체 페이지
                                 </button>
                                 <button
                                     onClick={() => setRangeOpen(v => !v)}
-                                    className={`press px-2.5 py-1.5 text-[11.5px] font-medium transition-colors border-l border-white/15 ${
+                                    className={`press px-2.5 py-1.5 text-[13px] font-medium transition-colors border-l border-white/15 ${
                                         rangeOpen ? 'bg-violet-500 text-white' : 'bg-black/70 hover:bg-violet-500 text-white'
                                     }`}
                                     title="필요한 페이지 구간만 인식합니다 (페이지당 약 ₩6)"
@@ -582,21 +582,21 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     <>
                         <button
                             onClick={addAllCandidates}
-                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-400 hover:bg-amber-300 text-zinc-950 text-[11.5px] font-semibold backdrop-blur-md transition-colors"
+                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-400 hover:bg-amber-300 text-zinc-950 text-[13px] font-semibold backdrop-blur-md transition-colors"
                         >
                             <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                             <span>전체 담기 {pageDetections.filter(c => !isAdded(c)).length}</span>
                         </button>
                         <button
                             onClick={() => setShowCandidates(v => !v)}
-                            className="press px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/15 transition-colors"
+                            className="press px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-[13px] font-medium backdrop-blur-md border border-white/15 transition-colors"
                         >
                             {showCandidates ? '후보 숨기기' : `후보 보기 ${pageDetections.length}`}
                         </button>
                         <button
                             onClick={handleDetect}
                             disabled={isDetecting}
-                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-violet-500 text-white text-[11.5px] font-medium backdrop-blur-md border border-white/15 transition-colors disabled:opacity-60"
+                            className="press flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/60 hover:bg-violet-500 text-white text-[13px] font-medium backdrop-blur-md border border-white/15 transition-colors disabled:opacity-60"
                             title="이 페이지를 다시 인식합니다 (약 ₩6)"
                         >
                             <RefreshCw className="w-3.5 h-3.5" strokeWidth={2} />
@@ -609,7 +609,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                 {/* 수동 드래그 — AI 인식과 짝이 되는 다른 갈래다. 처음부터 보이게 둔다.
                     (Alt 를 누른 채 놓으면 이번만 '그린 대로') */}
                 <div className="flex items-stretch rounded-lg overflow-hidden border border-white/15 shadow-lg backdrop-blur-md ml-1">
-                    <span className="flex items-center px-2.5 bg-black/70 text-zinc-300 text-[11.5px] font-semibold">수동 드래그</span>
+                    <span className="flex items-center px-2.5 bg-black/70 text-zinc-200 text-[13px] font-semibold">수동 드래그</span>
                     {[
                         { on: true, label: '문제에 맞춤' },
                         { on: false, label: '그린 대로' },
@@ -617,10 +617,10 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         <button
                             key={label}
                             onClick={() => updateSettings({ snapToProblem: on })}
-                            className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors border-l border-white/15 ${
+                            className={`px-2.5 py-1.5 text-[12.5px] font-medium transition-colors border-l border-white/15 ${
                                 !!settings.snapToProblem === on
                                     ? 'bg-amber-400 text-zinc-950 font-semibold'
-                                    : 'bg-black/60 text-zinc-300 hover:bg-black/80'
+                                    : 'bg-black/60 text-zinc-200 hover:bg-black/80'
                             }`}
                             title={on
                                 ? '대충 드래그해도 인식된 문제 경계에 맞춰 잘립니다 (아직 인식 전이면 그때 한 번 인식합니다)'
@@ -638,22 +638,22 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     className="absolute top-12 left-2 z-50 w-[272px] rounded-lg border border-white/15 bg-zinc-950/90 backdrop-blur-md shadow-xl p-3"
                     onPointerDown={(e) => e.stopPropagation()}
                 >
-                    <div className="text-[11.5px] font-semibold text-zinc-100 mb-2">인식할 페이지 구간</div>
+                    <div className="text-[13px] font-semibold text-zinc-100 mb-2">인식할 페이지 구간</div>
                     <div className="flex items-center gap-1.5">
                         <input
                             type="number" min={1} max={numPages || undefined}
                             value={rangeFrom}
                             onChange={(e) => setRangeFrom(e.target.value)}
-                            className="numeral w-[72px] px-2 py-1.5 rounded-md bg-black/60 border border-white/15 text-white text-[12px] text-center outline-none focus:border-violet-400"
+                            className="numeral w-[72px] px-2 py-1.5 rounded-md bg-black/60 border border-white/15 text-white text-[13.5px] text-center outline-none focus:border-violet-400"
                         />
-                        <span className="text-zinc-400 text-[12px]">–</span>
+                        <span className="text-zinc-300 text-[13.5px]">–</span>
                         <input
                             type="number" min={1} max={numPages || undefined}
                             value={rangeTo}
                             onChange={(e) => setRangeTo(e.target.value)}
-                            className="numeral w-[72px] px-2 py-1.5 rounded-md bg-black/60 border border-white/15 text-white text-[12px] text-center outline-none focus:border-violet-400"
+                            className="numeral w-[72px] px-2 py-1.5 rounded-md bg-black/60 border border-white/15 text-white text-[13.5px] text-center outline-none focus:border-violet-400"
                         />
-                        <span className="text-zinc-400 text-[11.5px]">
+                        <span className="text-zinc-300 text-[13px]">
                             / 전체 <span className="numeral text-zinc-200">{numPages || '?'}</span>쪽
                         </span>
                     </div>
@@ -666,26 +666,26 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                             <button
                                 key={label}
                                 onClick={() => { setRangeFrom(String(f)); setRangeTo(String(t)); }}
-                                className="press px-2 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 text-[10.5px] font-medium transition-colors"
+                                className="press px-2 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 text-[12px] font-medium transition-colors"
                             >
                                 {label}
                             </button>
                         ))}
                     </div>
-                    <div className="text-[11px] text-zinc-400 mt-2.5">
+                    <div className="text-[12.5px] text-zinc-300 mt-2.5">
                         <span className="numeral text-amber-300">{rangeCount}</span>장 · 예상 비용 약{' '}
                         <span className="numeral text-amber-300">₩{(rangeCount * 6).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-2.5">
                         <button
                             onClick={() => { setRangeOpen(false); onGlobalCrop(null, { from: rFrom, to: rTo }); }}
-                            className="press flex-1 px-2.5 py-1.5 rounded-md bg-violet-500 hover:bg-violet-400 text-white text-[11.5px] font-semibold transition-colors"
+                            className="press flex-1 px-2.5 py-1.5 rounded-md bg-violet-500 hover:bg-violet-400 text-white text-[13px] font-semibold transition-colors"
                         >
                             {rFrom}–{rTo} 인식
                         </button>
                         <button
                             onClick={() => setRangeOpen(false)}
-                            className="press px-2.5 py-1.5 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 text-[11.5px] font-medium transition-colors"
+                            className="press px-2.5 py-1.5 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 text-[13px] font-medium transition-colors"
                         >
                             닫기
                         </button>
@@ -713,7 +713,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         style={{ left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` }}
                         title={added ? '이미 담김' : '클릭하면 담깁니다'}
                     >
-                        <span className={`absolute -top-2.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold leading-none ${
+                        <span className={`absolute -top-2.5 left-1.5 px-1.5 py-0.5 rounded text-[11.5px] font-bold leading-none ${
                             added ? 'bg-emerald-400 text-zinc-950' : 'bg-violet-400 text-zinc-950'
                         }`}>
                             {added ? '담김' : (cand.label || '문제')}
@@ -752,7 +752,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                     >
                         {isCopied && (
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none">
-                                <div className="px-2 py-1 rounded-md bg-emerald-500 text-white text-[11px] font-semibold shadow-lg whitespace-nowrap">
+                                <div className="px-2 py-1 rounded-md bg-emerald-500 text-white text-[12.5px] font-semibold shadow-lg whitespace-nowrap">
                                     ✓ 복사됨
                                 </div>
                             </div>
@@ -808,7 +808,7 @@ const CropOverlay = React.memo(function CropOverlay({ pageNum, scale, renderScal
                         height: `${currentRect.height}px`
                     }}
                 >
-                    <span className="numeral absolute -top-[22px] left-0 whitespace-nowrap px-1.5 py-0.5 rounded bg-blue-500 text-white text-[11px] font-semibold shadow-md">
+                    <span className="numeral absolute -top-[22px] left-0 whitespace-nowrap px-1.5 py-0.5 rounded bg-blue-500 text-white text-[12.5px] font-semibold shadow-md">
                         P.{pageNum}{numPages ? ` / ${numPages}` : ''}
                     </span>
                 </div>

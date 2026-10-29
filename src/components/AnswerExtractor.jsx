@@ -269,7 +269,7 @@ export default function AnswerExtractor() {
         switch (type) {
             case 'multipleChoice': return 'bg-amber-400/10 text-amber-200 border-amber-400/25';
             case 'shortAnswer':    return 'bg-emerald-400/10 text-emerald-200 border-emerald-400/25';
-            default:                return 'bg-zinc-500/10 text-zinc-300 border-zinc-500/25';
+            default:                return 'bg-zinc-500/10 text-zinc-200 border-zinc-500/25';
         }
     };
 
@@ -289,9 +289,9 @@ export default function AnswerExtractor() {
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2.5">
                                 <span className="section-num">01</span>
-                                <h2 className="text-[14px] font-semibold text-zinc-100 tracking-tight">AI 자동 분석</h2>
+                                <h2 className="text-[15px] font-semibold text-zinc-100 tracking-tight">AI 자동 분석</h2>
                             </div>
-                            <p className="text-[11.5px] text-zinc-500 mt-1 leading-relaxed">이미지에서 정답을 추출합니다</p>
+                            <p className="text-[13px] text-zinc-400 mt-1 leading-relaxed">이미지에서 정답을 추출합니다</p>
                         </div>
                     </div>
 
@@ -299,10 +299,10 @@ export default function AnswerExtractor() {
                     <div className="mb-4 flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-emerald-400/[0.05] border border-emerald-400/20">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-300 mt-0.5 shrink-0" strokeWidth={2} />
                         <div className="flex-1 min-w-0">
-                            <p className="text-[12px] font-medium text-emerald-200 tracking-tight">
+                            <p className="text-[13.5px] font-medium text-emerald-200 tracking-tight">
                                 키 입력 없이 바로 사용
                             </p>
-                            <p className="text-[10.5px] text-zinc-500 mt-0.5 leading-relaxed">
+                            <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">
                                 서버에 안전하게 보관된 키로 처리됩니다.
                             </p>
                         </div>
@@ -326,16 +326,16 @@ export default function AnswerExtractor() {
                                     <img src={previewUrl} alt="Preview" className="max-h-32 mx-auto rounded-lg" />
                                 ) : (
                                     <div className="flex flex-col items-center py-3">
-                                        <FileText className="w-10 h-10 text-zinc-400 mb-2" strokeWidth={1.5} />
-                                        <span className="text-[12.5px] text-zinc-200 break-all">{selectedFile?.name}</span>
+                                        <FileText className="w-10 h-10 text-zinc-300 mb-2" strokeWidth={1.5} />
+                                        <span className="text-[14px] text-zinc-200 break-all">{selectedFile?.name}</span>
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <div className="py-1.5">
-                                <CloudUpload className="w-9 h-9 text-zinc-300 mx-auto mb-2.5" strokeWidth={1.5} />
-                                <p className="text-zinc-100 font-semibold text-[13px] tracking-tight">파일을 드래그하거나 클릭</p>
-                                <p className="text-zinc-500 text-[11px] mt-1">이미지 · PDF 지원</p>
+                                <CloudUpload className="w-9 h-9 text-zinc-200 mx-auto mb-2.5" strokeWidth={1.5} />
+                                <p className="text-zinc-100 font-semibold text-[14.5px] tracking-tight">파일을 드래그하거나 클릭</p>
+                                <p className="text-zinc-400 text-[12.5px] mt-1">이미지 · PDF 지원</p>
                             </div>
                         )}
                     </div>
@@ -343,7 +343,7 @@ export default function AnswerExtractor() {
                     <button
                         onClick={callGemini}
                         disabled={isAnalyzing || !selectedFile}
-                        className="premium-btn-primary press mt-4 w-full py-2.5 px-4 text-[13px] flex items-center justify-center gap-2"
+                        className="premium-btn-primary press mt-4 w-full py-2.5 px-4 text-[14.5px] flex items-center justify-center gap-2"
                     >
                         {isAnalyzing ? (
                             <>
@@ -364,29 +364,29 @@ export default function AnswerExtractor() {
                     <div className="flex justify-between items-start mb-4">
                         <div className="flex items-start gap-3.5">
                             <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                                <FileText className="w-4.5 h-4.5 text-zinc-300" strokeWidth={1.5} />
+                                <FileText className="w-4.5 h-4.5 text-zinc-200" strokeWidth={1.5} />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2.5">
                                     <span className="section-num">02</span>
-                                    <h2 className="text-[14px] font-semibold text-zinc-100 tracking-tight">텍스트 입력</h2>
+                                    <h2 className="text-[15px] font-semibold text-zinc-100 tracking-tight">텍스트 입력</h2>
                                 </div>
-                                <p className="text-[11.5px] text-zinc-500 mt-1 leading-relaxed">직접 입력 또는 AI 결과 편집</p>
+                                <p className="text-[13px] text-zinc-400 mt-1 leading-relaxed">직접 입력 또는 AI 결과 편집</p>
                             </div>
                         </div>
-                        <button onClick={handleClear} className="press text-[11px] text-zinc-500 hover:text-red-400 hover:bg-red-500/[0.06] px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors">
+                        <button onClick={handleClear} className="press text-[12.5px] text-zinc-400 hover:text-red-400 hover:bg-red-500/[0.06] px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors">
                             <Trash2 className="w-3 h-3" strokeWidth={2} /> 초기화
                         </button>
                     </div>
                     <textarea
-                        className="w-full p-3.5 bg-black/30 border border-white/[0.06] rounded-lg text-zinc-100 placeholder-zinc-600 resize-none mono text-[12.5px] h-32 focus-ring transition-colors hover:border-white/10 leading-relaxed"
+                        className="w-full p-3.5 bg-black/30 border border-white/[0.06] rounded-lg text-zinc-100 placeholder-zinc-600 resize-none mono text-[14px] h-32 focus-ring transition-colors hover:border-white/10 leading-relaxed"
                         placeholder="직접 입력하거나 AI 추출 결과가 표시됩니다…"
                         value={rawData}
                         onChange={(e) => setRawData(e.target.value)}
                     />
                     <div className="flex items-center gap-2 mt-3">
                         <div className="flex items-center gap-2 bg-black/30 px-3 py-2 rounded-lg border border-white/[0.06]">
-                            <span className="eyebrow !text-[9.5px]">시작 번호</span>
+                            <span className="eyebrow !text-[11px]">시작 번호</span>
                             <input
                                 type="number"
                                 value={startNumber}
@@ -396,7 +396,7 @@ export default function AnswerExtractor() {
                         </div>
                         <button
                             onClick={() => parseData()}
-                            className="press flex-1 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.12] text-zinc-100 font-semibold py-2.5 px-4 rounded-lg text-[12.5px] flex items-center justify-center gap-2 transition-colors"
+                            className="press flex-1 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.12] text-zinc-100 font-semibold py-2.5 px-4 rounded-lg text-[14px] flex items-center justify-center gap-2 transition-colors"
                         >
                             <ArrowRightCircle className="w-3.5 h-3.5" strokeWidth={2} />
                             변환 적용
@@ -413,7 +413,7 @@ export default function AnswerExtractor() {
                         <div className="flex items-center gap-3">
                             <span className="section-num">RESULT</span>
                             <h2 className="text-[16px] font-semibold text-zinc-100 tracking-tight">변환 결과</h2>
-                            <span className="numeral text-[11px] px-1.5 py-px rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
+                            <span className="numeral text-[12.5px] px-1.5 py-px rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
                                 {parsedRows.length}개
                             </span>
                         </div>
@@ -421,18 +421,18 @@ export default function AnswerExtractor() {
                         <div className="flex items-center gap-2">
                             <div className="flex items-center">
                                 <div className="relative">
-                                    <Filter className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" strokeWidth={1.75} />
+                                    <Filter className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.75} />
                                     <input
                                         type="text"
                                         value={rangeInput}
                                         onChange={(e) => setRangeInput(e.target.value)}
                                         placeholder="1, 3-5, 8"
-                                        className="numeral w-32 pl-8 pr-3 py-2 text-[12px] bg-black/30 border border-white/[0.06] rounded-l-lg text-zinc-100 placeholder-zinc-600 focus-ring transition-colors hover:border-white/10"
+                                        className="numeral w-32 pl-8 pr-3 py-2 text-[13.5px] bg-black/30 border border-white/[0.06] rounded-l-lg text-zinc-100 placeholder-zinc-600 focus-ring transition-colors hover:border-white/10"
                                     />
                                 </div>
                                 <button
                                     onClick={handleCopyRange}
-                                    className={`press px-3.5 py-2 rounded-r-lg text-[12px] font-medium border-y border-r transition-colors flex items-center gap-1.5 ${
+                                    className={`press px-3.5 py-2 rounded-r-lg text-[13.5px] font-medium border-y border-r transition-colors flex items-center gap-1.5 ${
                                         copiedRange
                                             ? 'bg-emerald-400/[0.08] border-emerald-400/30 text-emerald-200'
                                             : 'bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08] text-zinc-200'
@@ -445,7 +445,7 @@ export default function AnswerExtractor() {
 
                             <button
                                 onClick={handleCopySelected}
-                                className={`press px-3.5 py-2 rounded-lg text-[12px] font-medium border transition-colors flex items-center gap-1.5 ${
+                                className={`press px-3.5 py-2 rounded-lg text-[13.5px] font-medium border transition-colors flex items-center gap-1.5 ${
                                     copiedSelected
                                         ? 'bg-emerald-400/[0.08] border-emerald-400/30 text-emerald-200'
                                         : 'bg-amber-400/[0.06] border-amber-400/25 text-amber-200 hover:bg-amber-400/[0.10]'
@@ -460,10 +460,10 @@ export default function AnswerExtractor() {
                     <div className="flex gap-2 justify-end">
                         <button
                             onClick={() => handleCopyColumn('type', setCopiedType)}
-                            className={`press px-3 py-1.5 rounded-md text-[11px] font-semibold border transition-colors flex items-center gap-1.5 ${
+                            className={`press px-3 py-1.5 rounded-md text-[12.5px] font-semibold border transition-colors flex items-center gap-1.5 ${
                                 copiedType
                                     ? 'bg-emerald-400/[0.08] border-emerald-400/30 text-emerald-200'
-                                    : 'bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08] text-zinc-300'
+                                    : 'bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08] text-zinc-200'
                             }`}
                         >
                             {copiedType ? <Check className="w-3 h-3" strokeWidth={2.25} /> : <Copy className="w-3 h-3" strokeWidth={2} />}
@@ -471,10 +471,10 @@ export default function AnswerExtractor() {
                         </button>
                         <button
                             onClick={() => handleCopyColumn('answer', setCopiedAnswer)}
-                            className={`press px-3 py-1.5 rounded-md text-[11px] font-semibold border transition-colors flex items-center gap-1.5 ${
+                            className={`press px-3 py-1.5 rounded-md text-[12.5px] font-semibold border transition-colors flex items-center gap-1.5 ${
                                 copiedAnswer
                                     ? 'bg-emerald-400/[0.08] border-emerald-400/30 text-emerald-200'
-                                    : 'bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08] text-zinc-300'
+                                    : 'bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08] text-zinc-200'
                             }`}
                         >
                             {copiedAnswer ? <Check className="w-3 h-3" strokeWidth={2.25} /> : <Copy className="w-3 h-3" strokeWidth={2} />}
@@ -482,7 +482,7 @@ export default function AnswerExtractor() {
                         </button>
                         <button
                             onClick={handleCopyAll}
-                            className={`press px-3.5 py-1.5 rounded-md text-[11px] font-semibold border transition-colors flex items-center gap-1.5 ${
+                            className={`press px-3.5 py-1.5 rounded-md text-[12.5px] font-semibold border transition-colors flex items-center gap-1.5 ${
                                 copiedAll
                                     ? 'bg-emerald-400 border-emerald-400 text-zinc-950'
                                     : 'premium-btn-primary !rounded-md !py-1.5'
@@ -516,18 +516,18 @@ export default function AnswerExtractor() {
                     {/* Body */}
                     <div className="flex-1 overflow-y-auto mt-1.5 space-y-1 custom-scrollbar pr-1">
                         {parsedRows.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-zinc-500 py-20">
+                            <div className="h-full flex flex-col items-center justify-center text-zinc-400 py-20">
                                 <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center mb-4">
-                                    <Inbox className="w-7 h-7 text-zinc-500" strokeWidth={1.5} />
+                                    <Inbox className="w-7 h-7 text-zinc-400" strokeWidth={1.5} />
                                 </div>
-                                <p className="text-[14px] font-semibold text-zinc-200 tracking-tight">데이터가 없습니다</p>
-                                <p className="text-[12px] text-zinc-500 mt-1">파일을 업로드하여 정답을 추출하세요</p>
+                                <p className="text-[15px] font-semibold text-zinc-200 tracking-tight">데이터가 없습니다</p>
+                                <p className="text-[13.5px] text-zinc-400 mt-1">파일을 업로드하여 정답을 추출하세요</p>
                             </div>
                         ) : (
                             parsedRows.map((row, idx) => (
                                 <div
                                     key={row.id}
-                                    className={`grid grid-cols-12 gap-3 px-3 py-2.5 rounded-lg items-center text-[13px] border transition-colors ${
+                                    className={`grid grid-cols-12 gap-3 px-3 py-2.5 rounded-lg items-center text-[14.5px] border transition-colors ${
                                         selectedRows.has(row.id)
                                             ? 'bg-amber-400/[0.06] border-amber-400/25'
                                             : 'bg-white/[0.015] border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08]'
@@ -542,7 +542,7 @@ export default function AnswerExtractor() {
                                             className="w-3.5 h-3.5 rounded accent-amber-400 cursor-pointer"
                                         />
                                     </div>
-                                    <div className="col-span-1 text-center numeral text-zinc-500 text-[12px]">
+                                    <div className="col-span-1 text-center numeral text-zinc-400 text-[13.5px]">
                                         {row.originNum}
                                     </div>
                                     <div className="col-span-4">
@@ -561,7 +561,7 @@ export default function AnswerExtractor() {
                                         <select
                                             value={row.type}
                                             onChange={(e) => updateRow(idx, 'type', e.target.value)}
-                                            className={`w-full font-medium py-1 px-2 rounded-md border cursor-pointer text-[11px] bg-transparent ${getTypeStyle(row.type)}`}
+                                            className={`w-full font-medium py-1 px-2 rounded-md border cursor-pointer text-[12.5px] bg-transparent ${getTypeStyle(row.type)}`}
                                         >
                                             <option value="multipleChoice" className="bg-zinc-900">5지선다형</option>
                                             <option value="shortAnswer" className="bg-zinc-900">단답형</option>
