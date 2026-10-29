@@ -73,7 +73,7 @@ function AppShell() {
   const handleZoomReset = () => setZoomScale(1.5);
 
   return (
-    <div className="app-canvas grain h-screen w-screen flex flex-col overflow-hidden text-zinc-100">
+    <div className="app-canvas grain h-dvh min-h-[680px] w-full flex flex-col overflow-hidden text-zinc-100">
 
       <Header
         zoomLevel={zoomScale}

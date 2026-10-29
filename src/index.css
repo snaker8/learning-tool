@@ -40,7 +40,10 @@ html, body {
   margin: 0;
   background-color: var(--bg-base);
   color: var(--text-primary);
-  overflow: hidden;
+  /* 앱은 화면 높이에 맞춰 그리되(App.jsx), 낮은 노트북 화면에서는
+     min-h 아래로 줄지 않고 페이지 전체가 세로로 스크롤된다. */
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

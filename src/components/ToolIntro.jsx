@@ -16,7 +16,7 @@ export default function ToolIntro({ toolId, right = null }) {
   const isAi = tag === 'AI';
 
   return (
-    <div className="shrink-0 px-8 pt-6 pb-4">
+    <div className="shrink-0 px-8 pt-6 pb-4 [@media(max-height:820px)]:pt-3 [@media(max-height:820px)]:pb-2">
       <div className="flex items-start justify-between gap-5 flex-wrap">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -34,7 +34,7 @@ export default function ToolIntro({ toolId, right = null }) {
           </div>
           <p className="text-[14.5px] text-zinc-400 mt-1 leading-relaxed">{summary}</p>
 
-          <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+          <div className="mt-3 flex items-center gap-1.5 flex-wrap [@media(max-height:820px)]:hidden">
             {steps.map((s, i) => (
               <span key={s} className="flex items-center gap-1.5">
                 <span className="text-[13px] text-zinc-300 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.05]">

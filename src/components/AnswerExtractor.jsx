@@ -409,16 +409,16 @@ export default function AnswerExtractor() {
             <div className="flex-1 premium-panel p-5 flex flex-col overflow-hidden">
                 {/* Control Bar */}
                 <div className="flex flex-col gap-4 mb-4 pb-4 border-b border-white/[0.05]">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
+                    <div className="flex justify-between items-center flex-wrap gap-y-3">
+                        <div className="flex items-center gap-3 shrink-0">
                             <span className="section-num">RESULT</span>
-                            <h2 className="text-[16px] font-semibold text-zinc-100 tracking-tight">변환 결과</h2>
+                            <h2 className="text-[16px] font-semibold text-zinc-100 tracking-tight whitespace-nowrap">변환 결과</h2>
                             <span className="numeral text-[12.5px] px-1.5 py-px rounded-md bg-amber-400/10 border border-amber-400/25 text-amber-300">
                                 {parsedRows.length}개
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <div className="flex items-center">
                                 <div className="relative">
                                     <Filter className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.75} />
